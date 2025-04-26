@@ -41,9 +41,10 @@ class User(UserMixin):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        user_data = list(get_all_user_data_by_name(username))
+        data = request.form
+        username = data.get('username')
+        password = data.get('password')
+        user_data = get_all_user_data_by_name(username)
         print(user_data)
         if user_data:
             if user_data[2] == password and len(password) < 32:

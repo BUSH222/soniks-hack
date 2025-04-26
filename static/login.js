@@ -8,7 +8,6 @@ function togglePasswordVisibility(id) {
 }
 
 function limitInputLength(input, maxLength) {
-    console.log(input.value);
     if (input.value.length > maxLength) {
         input.value = input.value.slice(0, maxLength);
     }
@@ -16,10 +15,19 @@ function limitInputLength(input, maxLength) {
 
 document.getElementById("loginForm").addEventListener("submit", function(event) {
     event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    console.log("Username:", username);
     
+    if (!username || !password) {
+        alert('Please enter both username and password.');
+        return;
+    }
+
     const formData = new FormData();
-    formData.append("username", document.getElementById("username").value);
-    formData.append("password", document.getElementById("password").value);
+    formData.append("username", username);
+    formData.append("password", password);
 
     fetch('/login', {
         method: 'POST',
@@ -28,10 +36,15 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
     .then(response => response.text())
     .then(data => {
         if (data === 'OK') {
-            window.location.href = '/account';
-        } else {
+            window.location.href = '/users';
+        } else if (data === 'INVALID_CREDENTIALS') {
             alert('Invalid username or password');
+        } else {
+            alert('Unexpected error: ' + data);
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error with the login. Please try again.');
+    });
 });
