@@ -1,1 +1,1 @@
-pipelines = {0: 'None', 1: 'Meteor Demodulator'}
+pipelines = {0: 'None', 1: 'RDS'}

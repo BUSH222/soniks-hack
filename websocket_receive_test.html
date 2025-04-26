@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>WebSocket Demo</title>
+</head>
+<body>
+  <h1>WebSocket Client</h1>
+  <script>
+    // Connect to your backend WebSocket
+    const ws = new WebSocket("ws://localhost:8000/hi");
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+      ws.send("Hello from the browser!");
+    };
+
+    ws.onmessage = (event) => {
+      console.log("Server sent:", event.data);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket closed");
+    };
+  </script>
+</body>
+</html>
