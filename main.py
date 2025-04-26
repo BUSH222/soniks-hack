@@ -17,12 +17,11 @@ login_manager.login_view = 'login'
 
 
 class User(UserMixin):
-    def __init__(self, id, username, password, email):
+    def __init__(self, id, username, password):
         self.id = id
         self.username = username
         self.password = password
-        self.email = email
-
+        
 
 @app.route('/')
 def index():
@@ -85,8 +84,37 @@ def station(id):
 @app.route('/stations/<id>/dashboard', methods=['GET', 'POST'])
 @login_required
 def station_dashboard(id):
-    return render_template("stations_map.html",id=id)
+    return render_template("stations_dashboard.html",id=id)
 
+
+
+@app.route('/stations/<id>/dashboard/map', methods=['GET', 'POST'])
+@login_required
+def map(id):
+    if request.method == "GET":
+        info = get_full_station_info_by_id(id)
+        station_planned_tles = requests.get(f'/api/jobs/?id=&status=&ground_station={id}&start=&end=&satellite__norad_cat_id=&transmitter__uuid=&transmitter__downlink_mode=&transmitter__type=&waterfall_status=&vetted_status=&vetted_user=&observer=&observation_id=')
+        tles = []
+        for i in station_planned_tles:
+            res = {}
+            res["tle0"] = station_planned_tles["tle0"]
+            res["tle1"] = station_planned_tles["tle1"]
+            res["tle2"] = station_planned_tles["tle2"]
+            tles.append(res)
+    return render_template("stations_map.html",info=info,tles=tles)
+
+
+@app.route('/stations/<id>/dashboard/reception', methods=['GET', 'POST'])
+@login_required
+def reception(id):
+    return render_template('reception.html',id=id)
+
+
+
+@app.route('/stations/<id>/dashboard/archive', methods=['GET', 'POST'])
+@login_required
+def reception(id):
+    return render_template('archive.html',id=id)
 
 
 @app.route('/stations/edit/<id>', methods=['GET', 'POST'])
