@@ -24,7 +24,6 @@ def check_keep_alive():
         time.sleep(10)
 
 
-
 @app.route('/start_conn', methods=['POST'])
 def start_conn():
     frequency = request.args.get('frequency')
