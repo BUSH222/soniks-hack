@@ -28,7 +28,7 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
     const formData = new FormData();
     formData.append("username", username);
     formData.append("password", password);
-
+    
     fetch('/login', {
         method: 'POST',
         body: formData,
@@ -36,7 +36,8 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
     .then(response => response.text())
     .then(data => {
         if (data === 'OK') {
-            window.location.href = '/users';
+            const path = '/users/' + username
+            window.location.href = path;
         } else if (data === 'INVALID_CREDENTIALS') {
             alert('Invalid username or password');
         } else {
