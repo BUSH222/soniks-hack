@@ -39,8 +39,9 @@ def index():
 @app.route("/login_password", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        data = request.get_json() 
+        username = data.get("username")  
+        password = data.get("password")
         user_data = list(get_all_user_data_by_name(username))
         print(user_data)
         if user_data:
@@ -138,9 +139,10 @@ def settings(id):
     if request.method == "GET":
         info = get_station_brief_info_by_id(id)
     if request.method == "POST":
-        mail = request.form["notify_mail"]
-        tg = request.form["notify_tg"]
-        time = request.form["early_time"]
+        data = request.get_json() 
+        mail = data.get("notify_mail")
+        tg = data.get("notify_tg")
+        time = data.get("early_time")
         update_station_info(
             id, notify_mail=mail, notify_tg=tg, early_time=time)
 
@@ -153,10 +155,11 @@ def edit_station(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
     if request.method == "POST":
-        name = request.form["name"]
-        lat = request.form["lat"]
-        long = request.form["long"]
-        alt = request.form["alt"]
+        data = request.get_json() 
+        name = data.get["name"]
+        lat = data.get["lat"]
+        long = data.get["long"]
+        alt = data.get["alt"]
         sdr_server_address = request.form["sdr_server_address"]
         update_station_info(
             id,
