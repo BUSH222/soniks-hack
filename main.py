@@ -121,6 +121,22 @@ def reception(id):
     return render_template('archive.html',id=id)
 
 
+@app.route('/stations/<id>/dashboard/settings', methods=['GET', 'POST'])
+@login_required
+def reception(id):
+    if request.method == "GET":
+        info = get_station_brief_info_by_id(id)
+    if request.method == "POST":
+        mail = request.form["notify_mail"]
+        tg = request.form["notify_tg"]
+        time =  request.form["early_time"]
+        update_station_info(id,notif_mai= notif_mai,notif_tg= notif_tg,early_time= early_time)
+
+    return render_template('settings.html',info=info)
+
+
+
+
 @app.route('/stations/edit/<id>', methods=['GET', 'POST'])
 @login_required   
 def edit_station(id):
@@ -131,11 +147,8 @@ def edit_station(id):
             lat = request.form["lat"]
             long = request.form["long"]
             alt = request.form["alt"]
-            notif_mai = request.form["notif_mai"]
-            notif_tg = request.form["notif_tg"]
-            early_time = request.form["early_time"]
             sdr_server_address = request.form["sdr_server_address"]
-            update_station_info(id,name = name,lat = lat,long = long,alt= alt,notif_mai= notif_mai,notif_tg= notif_tg,early_time= early_time, sdr_server_address=sdr_server_address)
+            update_station_info(id,name = name,lat = lat,long = long,alt= alt, sdr_server_address=sdr_server_address)
             return(redirect(url_for('satation',id=id)))
 
     return render_template("stations_editor.html",info = info)
