@@ -9,6 +9,7 @@ from flask_login import (
 )
 from dbmanager import (
     get_all_user_data_by_name,
+    confirm_ownership,
     get_all_user_data_by_id,
     get_stations_by_user_id,
     get_user_id_by_name,
@@ -92,21 +93,18 @@ def user_stations(name):
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
 def station(id):
-    user_id = get_user_id_by_name(current_user.name)
-    user_owned_stations = get_stations_by_user_id(user_id)
-    if user_id in user_owned_stations:
+    if confirm_ownership(current_user.id,id):
         change_button = True
     if request.method == "GET":
         owner = get_station_owner(id)
         info = get_full_station_info_by_id(id)
-        info.append(owner)
-    return render_template("stations.html", info=info, change_button=change_button)
+    return render_template("stations.html", owner=owner,info=info, change_button=change_button)
 
 
 @app.route("/stations/<id>/dashboard", methods=["GET", "POST"])
 @login_required
 def station_dashboard(id):
-    return render_template("stations_dashboard.html", id=id)
+    return render_template("dashboard.html", id=id)
 
 
 @app.route("/stations/<id>/dashboard/map", methods=["GET", "POST"])
