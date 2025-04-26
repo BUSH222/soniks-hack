@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
 )
 from sqlalchemy.orm import sessionmaker, declarative_base
+from helper import generate_coordinate_id
 
 Base = declarative_base()
 
