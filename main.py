@@ -63,7 +63,7 @@ def user_stations():
         user_id = get_user_id_by_name(current_user.name)
         stations_id =get_stations_by_user_id(user_id)
         for id in stations_id:
-            ex = get_station_brief_info_by_id(id)
+            ex = get_station_brief_info_by_id(id)[:2]
             info.append(ex)
     return render_template("stations.html",stations = info)
 
@@ -100,6 +100,10 @@ def map(id):
             res["tle0"] = station_planned_tles["tle0"]
             res["tle1"] = station_planned_tles["tle1"]
             res["tle2"] = station_planned_tles["tle2"]
+            stat_inf = get_station_brief_info_by_id(id)
+            res["lat"] = stat_inf[2]
+            res["long"] = stat_inf[3]
+            res["alt"] = stat_inf[4]
             tles.append(res)
     return render_template("stations_map.html",info=info,tles=tles)
 
