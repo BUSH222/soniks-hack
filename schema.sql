@@ -1,4 +1,4 @@
-create table if not exists user(
+create table if not exists "user"(
     id serial primary key,
     name VARCHAR(32) NOT NULL,
     password VARCHAR(32) NOT NULL,
@@ -20,6 +20,6 @@ create table if not exists station(
 
 create table if not exists ownership(
     id serial primary key,
-    user_id INT REFERENCES user(id),
+    user_id INT REFERENCES "user"(id),
     station_id INT REFERENCES station(id)
 );
