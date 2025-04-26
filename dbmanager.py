@@ -5,6 +5,7 @@ from sqlalchemy import (
     String,
     Float,
     Boolean,
+    ForeignKey,
 )
 from sqlalchemy.orm import sessionmaker, declarative_base
 from helper import generate_coordinate_id
@@ -36,8 +37,9 @@ class Station(Base):
 
 class Ownership(Base):
     __tablename__ = "ownership"
-    user_id = Column(Integer, ForeignKey=True)
-    station_id = Column(Integer, ForeignKey=True)
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    station_id = Column(Integer, ForeignKey("stations.id"))
 
 
 engine = create_engine("postgresql://user:password@localhost/dbname")
@@ -86,3 +88,7 @@ def get_user_id_by_name(name):
 def get_full_station_info_by_id(id):
     info = db_session.query(Station).filter(Station.id == id)
     return info
+
+def get_all_user_data_by_name(name):
+    data = db_session.query(User).filter(User.name == name).first()
+    return data

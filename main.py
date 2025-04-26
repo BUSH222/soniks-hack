@@ -18,11 +18,18 @@ from dbmanager import (
 )
 import requests
 
-
 app = Flask(__name__)
-login_manager = LoginManager(app)
-login_manager.login_view = "login"
+app.secret_key = 'your_secret_key'
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    user_data = get_all_user_data_by_name(user_id)
+    if user_data:
+        return User(*user_data)
+    return None
 
 class User(UserMixin):
     def __init__(self, id, username, password):
@@ -31,12 +38,7 @@ class User(UserMixin):
         self.password = password
 
 
-@app.route("/")
-def index():
-    return render_template("login.html")
-
-
-@app.route("/login_password", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"]
@@ -50,7 +52,7 @@ def login():
                 return redirect(url_for("user_stations"))
             else:
                 return "Invalid username or password"
-    return render_template("login_password.html")
+    return render_template("login.html")
 
 
 @app.route("/logout")
@@ -62,21 +64,23 @@ def logout():
 
 @app.route("/")
 def main():
-    return "dashboard.html" # was main.html
+    return render_template("login.html")
 
 
-@app.route("/users/<current_user.name>", methods=["GET", "POST"])
+@app.route("/users/<name>", methods=["GET", "POST"])
 @login_required
-def user_stations():
+def user_stations(name):
     info = []
     if request.method == "GET":
-        user_id = get_user_id_by_name(current_user.name)
-        stations_id = get_stations_by_user_id(user_id)
-        for id in stations_id:
-            ex = get_station_brief_info_by_id(id)[:2]
-            info.append(ex)
+        if current_user.name == name:
+            user_id = get_user_id_by_name(name)
+            stations_id = get_stations_by_user_id(user_id)
+            for id in stations_id:
+                ex = get_station_brief_info_by_id(id)[:2]
+                info.append(ex)
+        else:
+            info = "Authification error"
     return render_template("stations.html", stations=info)
-
 
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
@@ -169,3 +173,6 @@ def edit_station(id):
         return redirect(url_for("satation", id=id))
 
     return render_template("stations_editor.html", info=info)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
