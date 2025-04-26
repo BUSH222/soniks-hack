@@ -1,9 +1,24 @@
 from flask import Flask, redirect, render_template, request, url_for, abort, Response
 from flask_login import login_required
-from flask_login import login_user, LoginManager, current_user, login_required, UserMixin, logout_user
+from flask_login import (
+    login_user,
+    LoginManager,
+    current_user,
+    login_required,
+    UserMixin,
+    logout_user,
+)
 from sqlalchemy import select, func, extract, and_, inspect
 from sqlalchemy.orm import Session
-from dbmanager import (get_all_user_data_by_name,get_stations_by_user_id,get_user_id_by_name,get_station_brief_info_by_id,get_full_station_info_by_id,get_station_owner,update_station_info)
+from dbmanager import (
+    get_all_user_data_by_name,
+    get_stations_by_user_id,
+    get_user_id_by_name,
+    get_station_brief_info_by_id,
+    get_full_station_info_by_id,
+    get_station_owner,
+    update_station_info,
+)
 import urllib.parse
 import requests
 from datetime import datetime
@@ -13,7 +28,7 @@ from helper import generate_coordinate_id
 
 app = Flask(__name__)
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+login_manager.login_view = "login"
 
 
 class User(UserMixin):
@@ -21,53 +36,56 @@ class User(UserMixin):
         self.id = id
         self.username = username
         self.password = password
-        
 
-@app.route('/')
+
+@app.route("/")
 def index():
     return render_template("login_with.html")
 
 
-@app.route('/login_password', methods=['GET', 'POST'])
+@app.route("/login_password", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
         user_data = list(get_all_user_data_by_name(username))
         print(user_data)
         if user_data:
             if user_data[2] == password and len(password) < 32:
                 user = User(*user_data)
                 login_user(user)
-                return redirect(url_for('user_stations'))
+                return redirect(url_for("user_stations"))
             else:
                 return "Invalid username or password"
-    return render_template('login_password.html')
+    return render_template("login_password.html")
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
-@app.route('/')
+
+@app.route("/")
 def main():
-    return('main.html')
+    return "main.html"
 
-@app.route('/users/<current_user.name>', methods=['GET', 'POST'])
+
+@app.route("/users/<current_user.name>", methods=["GET", "POST"])
 @login_required
 def user_stations():
     info = []
     if request.method == "GET":
         user_id = get_user_id_by_name(current_user.name)
-        stations_id =get_stations_by_user_id(user_id)
+        stations_id = get_stations_by_user_id(user_id)
         for id in stations_id:
             ex = get_station_brief_info_by_id(id)[:2]
             info.append(ex)
-    return render_template("stations.html",stations = info)
+    return render_template("stations.html", stations=info)
 
-@app.route('/stations/<id>', methods=['GET', 'POST'])
+
+@app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
 def station(id):
     user_id = get_user_id_by_name(current_user.name)
@@ -78,22 +96,23 @@ def station(id):
         owner = get_station_owner(id)
         info = get_full_station_info_by_id(id)
         info.append(owner)
-    return render_template("stations.html",info=info,change_button=change_button)
+    return render_template("stations.html", info=info, change_button=change_button)
 
 
-@app.route('/stations/<id>/dashboard', methods=['GET', 'POST'])
+@app.route("/stations/<id>/dashboard", methods=["GET", "POST"])
 @login_required
 def station_dashboard(id):
-    return render_template("stations_dashboard.html",id=id)
+    return render_template("stations_dashboard.html", id=id)
 
 
-
-@app.route('/stations/<id>/dashboard/map', methods=['GET', 'POST'])
+@app.route("/stations/<id>/dashboard/map", methods=["GET", "POST"])
 @login_required
 def map(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
-        station_planned_tles = requests.get(f'/api/jobs/?id=&status=&ground_station={id}&start=&end=&satellite__norad_cat_id=&transmitter__uuid=&transmitter__downlink_mode=&transmitter__type=&waterfall_status=&vetted_status=&vetted_user=&observer=&observation_id=')
+        station_planned_tles = requests.get(
+            f"/api/jobs/?id=&status=&ground_station={id}&start=&end=&satellite__norad_cat_id=&transmitter__uuid=&transmitter__downlink_mode=&transmitter__type=&waterfall_status=&vetted_status=&vetted_user=&observer=&observation_id="
+        )
         tles = []
         for i in station_planned_tles:
             res = {}
@@ -105,23 +124,22 @@ def map(id):
             res["long"] = stat_inf[3]
             res["alt"] = stat_inf[4]
             tles.append(res)
-    return render_template("stations_map.html",info=info,tles=tles)
+    return render_template("stations_map.html", info=info, tles=tles)
 
 
-@app.route('/stations/<id>/dashboard/reception', methods=['GET', 'POST'])
+@app.route("/stations/<id>/dashboard/reception", methods=["GET", "POST"])
 @login_required
 def reception(id):
-    return render_template('reception.html',id=id)
+    return render_template("reception.html", id=id)
 
 
-
-@app.route('/stations/<id>/dashboard/archive', methods=['GET', 'POST'])
+@app.route("/stations/<id>/dashboard/archive", methods=["GET", "POST"])
 @login_required
 def reception(id):
-    return render_template('archive.html',id=id)
+    return render_template("archive.html", id=id)
 
 
-@app.route('/stations/<id>/dashboard/settings', methods=['GET', 'POST'])
+@app.route("/stations/<id>/dashboard/settings", methods=["GET", "POST"])
 @login_required
 def reception(id):
     if request.method == "GET":
@@ -129,28 +147,33 @@ def reception(id):
     if request.method == "POST":
         mail = request.form["notify_mail"]
         tg = request.form["notify_tg"]
-        time =  request.form["early_time"]
-        update_station_info(id,notif_mai= notif_mai,notif_tg= notif_tg,early_time= early_time)
+        time = request.form["early_time"]
+        update_station_info(
+            id, notif_mai=notif_mai, notif_tg=notif_tg, early_time=early_time
+        )
 
-    return render_template('settings.html',info=info)
+    return render_template("settings.html", info=info)
 
 
-
-
-@app.route('/stations/edit/<id>', methods=['GET', 'POST'])
-@login_required   
+@app.route("/stations/edit/<id>", methods=["GET", "POST"])
+@login_required
 def edit_station(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
     if request.method == "POST":
-            name = request.form["name"]
-            lat = request.form["lat"]
-            long = request.form["long"]
-            alt = request.form["alt"]
-            sdr_server_address = request.form["sdr_server_address"]
-            update_station_info(id,name = name,lat = lat,long = long,alt= alt, sdr_server_address=sdr_server_address)
-            return(redirect(url_for('satation',id=id)))
+        name = request.form["name"]
+        lat = request.form["lat"]
+        long = request.form["long"]
+        alt = request.form["alt"]
+        sdr_server_address = request.form["sdr_server_address"]
+        update_station_info(
+            id,
+            name=name,
+            lat=lat,
+            long=long,
+            alt=alt,
+            sdr_server_address=sdr_server_address,
+        )
+        return redirect(url_for("satation", id=id))
 
-    return render_template("stations_editor.html",info = info)
-
-
+    return render_template("stations_editor.html", info=info)
