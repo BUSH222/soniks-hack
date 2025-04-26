@@ -19,7 +19,7 @@
             <input type="number" id="mhzAmount" name="mhzAmount" placeholder="e.g. 100">
             <button id="setMhzBtn">OK</button>
             <label for="bandwidth">Bandwidth:</label>
-            <input type="text" id="bandwidth" name="bandwidth" placeholder="e.g. 20 MHz">
+            <input type="number" id="bandwidth" value="2.048" />
         </div>
         <!-- panel 2 -->
         <div class="panel" id="panel2">
@@ -59,13 +59,10 @@
         </div>
     </div>
 
-    <!-- Include Chart.js or other libs as needed -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Placeholder scripts to initialize charts
         document.addEventListener('DOMContentLoaded', function() {
         const ctxWaterfall = document.getElementById('waterfallCanvas').getContext('2d');
-        // Initialize waterfall (satellite) chart here
 
         const ctxSNR = document.getElementById('snrGraphCanvas').getContext('2d');
         const snrChart = new Chart(ctxSNR, {

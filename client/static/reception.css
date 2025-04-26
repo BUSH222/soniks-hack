@@ -1,65 +1,139 @@
-body, html {
+:root {
+    --orange: #fe5e22;
+    --blue: #2998e5;
+  }
+  
+  body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
   }
+  
   .container {
     display: grid;
-    grid-template-columns: 250px 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-columns: 200px 1fr;
     height: 100%;
   }
+  
   .sidebar {
-    background: #f4f4f4;
-    padding: 10px;
-    border-right: 1px solid #ccc;
+    background: #ffffff;
+    padding: 15px;
+    border-right: 1px solid #ddd;
     overflow-y: auto;
   }
+  
   .panel {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
     margin-bottom: 20px;
-    padding: 10px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
+  
   .panel h3 {
     margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: var(--blue);
   }
-  .panel input, .panel select, .panel button {
-    width: 100%;
-    margin: 5px 0;
-    padding: 5px;
-    box-sizing: border-box;
+  
+  .panel input,
+  .panel select {
+    width: 90%;
+    margin-bottom: 15px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
   }
+  
+  .panel button {
+    width: 80%;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background-color: var(--orange);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .panel button:hover {
+    background-color: #e65100;
+  }
+  
   .main {
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 15px;
+    background-color: #f8f9fa;
   }
+  
   .waterfall {
-    flex: 2;
-    border: 1px solid #ccc;
-    margin-bottom: 10px;
+    height: 65vh;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    background-color: #ffffff;
+    overflow: hidden;
     position: relative;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
+  
   .graph {
-    flex: 1;
-    border: 1px solid #ccc;
+    flex: none;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    background: #ffffff;
     position: relative;
-    display: flex;
-    align-items: flex-end;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
+  
+  .graph canvas {
+    width: 100%;
+    max-height: 200px;
+    height: auto;
+    display: block;
+  }
+  
   .metrics {
     position: absolute;
-    right: 10px;
-    bottom: 10px;
-    background: rgba(255,255,255,0.8);
-    padding: 5px;
-    border: 1px solid #aaa;
-    border-radius: 4px;
+    right: 15px;
+    bottom: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
+  
+  ul#dataList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  ul#dataList li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+  }
+  
+  ul#dataList li:last-child {
+    border-bottom: none;
+  }
+  
   canvas {
     width: 100%;
     height: 100%;
   }
+  
