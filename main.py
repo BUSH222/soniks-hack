@@ -9,6 +9,7 @@ from flask_login import (
 )
 from dbmanager import (
     get_all_user_data_by_name,
+    get_all_user_data_by_id,
     get_stations_by_user_id,
     get_user_id_by_name,
     get_station_brief_info_by_id,
@@ -26,9 +27,10 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    user_data = get_all_user_data_by_name(user_id)
+    user_data = get_all_user_data_by_id(user_id)
+    print(user_data)
     if user_data:
-        return User(*user_data)
+        return User(user_data[0],user_data[1],user_data[2])
     return None
 
 class User(UserMixin):
@@ -48,9 +50,9 @@ def login():
         print(user_data)
         if user_data:
             if user_data[2] == password and len(password) < 32:
-                user = User(user_data[1],user_data[2])
+                user = User(user_data[0],user_data[1],user_data[2])
                 login_user(user)
-                return redirect(url_for("users",name))
+                return 'OK'
             else:
                 return "Invalid username or password"
     return render_template("login.html")
@@ -73,15 +75,19 @@ def main():
 def user_stations(name):
     info = []
     if request.method == "GET":
-        if current_user.name == name:
+        if current_user.username == name:
             user_id = get_user_id_by_name(name)
             stations_id = get_stations_by_user_id(user_id)
+            print(f"id:{user_id}")
+            print(f"stat:{stations_id}")
             for id in stations_id:
-                ex = get_station_brief_info_by_id(id)[:2]
+                ex = get_station_brief_info_by_id(id)
                 info.append(ex)
+                print(info)
         else:
             info = "Authification error"
-    return render_template("stations.html", stations=info)
+
+    return render_template("users.html", stations=info)
 
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
