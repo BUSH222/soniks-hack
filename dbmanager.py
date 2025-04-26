@@ -37,8 +37,8 @@ class Station(Base):
 
 class Ownership(Base):
     __tablename__ = "ownership"
-    user_id = Column(Integer, primary_key=True)
-    station_id = Column(Integer)
+    user_id = Column(Integer, ForeignKey=True)
+    station_id = Column(Integer, ForeignKey=True)
 
 
 engine = create_engine("postgresql://user:password@localhost/dbname")
