@@ -50,7 +50,7 @@ def login():
             if user_data[2] == password and len(password) < 32:
                 user = User(*user_data)
                 login_user(user)
-                return redirect(url_for("user_stations"))
+                return redirect(url_for("users",name))
             else:
                 return "Invalid username or password"
     return render_template("login.html")
