@@ -16,15 +16,12 @@ from dbmanager import (
     get_station_owner,
     update_station_info,
 )
-
 import requests
-
 
 
 app = Flask(__name__)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
-
 
 class User(UserMixin):
     def __init__(self, id, username, password):
