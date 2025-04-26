@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, url_for, abort, Response
+from flask import Flask, redirect, render_template, request, url_for
 from flask_login import login_required
 from flask_login import (
     login_user,
@@ -8,8 +8,6 @@ from flask_login import (
     UserMixin,
     logout_user,
 )
-from sqlalchemy import select, func, extract, and_, inspect
-from sqlalchemy.orm import Session
 from dbmanager import (
     get_all_user_data_by_name,
     get_stations_by_user_id,
@@ -19,11 +17,9 @@ from dbmanager import (
     get_station_owner,
     update_station_info,
 )
-import urllib.parse
+
 import requests
-from datetime import datetime
-from dateutil.parser import parse
-from helper import generate_coordinate_id
+
 
 
 app = Flask(__name__)
@@ -149,8 +145,7 @@ def reception(id):
         tg = request.form["notify_tg"]
         time = request.form["early_time"]
         update_station_info(
-            id, notif_mai=notif_mai, notif_tg=notif_tg, early_time=early_time
-        )
+            id, notify_mail=mail, notify_tg=tg, early_time=time)
 
     return render_template("settings.html", info=info)
 
