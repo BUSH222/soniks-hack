@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Satellite Ground Station Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    class Station {
+        constructor(name, latitude, longitude, altitude) {
+            this.name = name;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.altitude = altitude;
+        }
+    }
+
+    function count_radius(altitude) {
+        return Math.sqrt(12756 * altitude + altitude * altitude) + 2294000;
+    }
+
+    const TLE0 = 'ISS (ZARYA)'; // from api 
+    const TLE1 = "1 25544U 98067A   22089.56718056  .00000123  00000-0  00000-0 0  9990"; // from api 
+    const TLE2 = "2 25544  51.6443  215.0487 0007091  106.4649  253.1534 15.50110577387725"; // from api 
+    const inclination = parseFloat(TLE2.trim().split(/\s+/)[2]);
+    const epoch = parseFloat(TLE1.trim().split(/\s+/)[3]);
+
+
+    let lastPosition = null;
+    let satelliteMarker = null;
+
+    function updateSatellitePosition() {
+        const currentDate = new Date();
+        const timeInSeconds = currentDate.getSeconds() + currentDate.getMinutes() * 60;
+
+        const velocityFactor = 0.001;
+
+        const latitude = Math.sin((timeInSeconds * velocityFactor) * Math.PI / 180) * inclination;
+        const longitude = (timeInSeconds * velocityFactor) % 360;
+
+        if (lastPosition) {
+            L.polyline([lastPosition, [latitude, longitude]], { color: 'black' }).addTo(map);
+        }
+
+        if (satelliteMarker) {
+            satelliteMarker.setLatLng([latitude, longitude]);
+        } else {
+            const satelliteIcon = L.divIcon({
+                html: '🛰️',
+                className: '',
+                iconSize: [60, 60],
+                iconAnchor: [15, 15],
+            });
+
+            satelliteMarker = L.marker([latitude, longitude], { icon: satelliteIcon })
+                .addTo(map)
+                .bindPopup(`<b>${TLE0}</b> Satellite Position:<br>Lat: ${latitude.toFixed(2)}°<br>Lon: ${longitude.toFixed(2)}°`);
+        }
+
+        lastPosition = [latitude, longitude];
+    }
+
+    setInterval(updateSatellitePosition, 10);
+
+    var station = new Station("sateiilte recieving station", 55.8581, 37, 4000); // from api 
+
+    var map = L.map('map', {
+        worldCopyJump: true,
+        maxBounds: [
+            [-90, -180],
+            [90, 180]
+        ],
+        maxBoundsViscosity: 0.5,
+        minZoom: 2,
+        maxZoom: 20,
+        zoomControl: true,
+        dragging: true,
+        bounceAtZoomLimits: true,
+    }).setView([station.latitude, station.longitude], 4);
+
+    map.options.crs = L.CRS.EPSG3857;
+
+    map.on('moveend', function() {
+        if (map.getCenter().lng < -180) {
+            map.setView([map.getCenter().lat, 180], map.getZoom(), { animate: false });
+        }
+        if (map.getCenter().lng > 180) {
+            map.setView([map.getCenter().lat, -180], map.getZoom(), { animate: false });
+        }
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+    }).addTo(map);
+
+    L.marker([station.latitude, station.longitude])
+        .addTo(map)
+        .bindPopup(`<b>${station.name}</b><br>Altitude: ${station.altitude} meters`)
+        .openPopup();
+
+    L.circle([station.latitude, station.longitude], {
+        radius: count_radius(station.altitude),
+        color: 'yellow',
+        fillColor: 'orange',
+        fillOpacity: 0.2
+    }).addTo(map);
+
+    const pathCoordinates = [];
+    for (let i = 0; i <= 360; i++) {
+        const lat = -Math.sin((i * Math.PI) / 180) * inclination;
+        const lon = (i - 180) % 360;
+        pathCoordinates.push([lat, lon]);
+    }
+
+    L.polyline(pathCoordinates, { color: 'blue', weight: 2 }).addTo(map);
+</script>
+
+</body>
+</html>
