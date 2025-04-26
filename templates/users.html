@@ -21,16 +21,12 @@
             <tbody>
                 {% for station in stations %}
                 <tr>
-                    <th scope="row">{{ station.id }}</th>
-                    <td>
-                        <a href="{{ url_for('station_detail', station_id=station.id) }}" class="text-decoration-none">
-                            {{ station.name }}
-                        </a>
-                    </td>
-                    <td>{{ station.coordinates }}</td>
-                    <td>{{ station.observations_count }}</td>
-                    <td>{{ station.future_count }}</td>
-                    <td>{{ station.antennas }}</td>
+                    <th scope="row">{{ station[0] }}</th>
+                    <td>{{ station[1] }}</td>
+                    <td>{{ station[2] }}</td>
+                    
+                    
+
                 </tr>
                 {% endfor %}
             </tbody>
