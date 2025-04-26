@@ -91,4 +91,7 @@ def get_full_station_info_by_id(id):
 
 def get_all_user_data_by_name(name):
     data = db_session.query(User).filter(User.name == name).first()
-    return [data.id,data.name,data.password]
+    if data:
+        return [data.id,data.name,data.password]
+    else:
+        return "No such user"
