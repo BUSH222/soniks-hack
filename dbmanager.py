@@ -14,7 +14,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     name = Column(String)
     password = Column(String)
@@ -23,7 +23,7 @@ class User(Base):
 
 
 class Station(Base):
-    __tablename__ = "stations"
+    __tablename__ = "station"
     id = Column(Integer, primary_key=True)
     name = Column(String)
     lat = Column(Float)
@@ -38,11 +38,11 @@ class Station(Base):
 class Ownership(Base):
     __tablename__ = "ownership"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("user.id"))
     station_id = Column(Integer, ForeignKey("stations.id"))
 
 
-engine = create_engine("postgresql://postgres:your_password@localhost/goida")
+engine = create_engine("postgresql://postgres:postgres@localhost/goida")
 Session = sessionmaker(bind=engine)
 db_session = Session()
 
@@ -67,15 +67,18 @@ def get_station_owner(station_id):
 
 
 def get_station_brief_info_by_id(station_id):
-    station = db_session.query(Station).filter(Station.id == station_id)
+    station = db_session.query(Station).filter(Station.id == station_id).first()
     location = generate_coordinate_id(station.lat, station.long)
-    info = [station.name, location, station.lat, station.long, station.alt]
+    info = [station.id,station.name, location]
     return info
 
 
 def get_stations_by_user_id(user_id):
-    stations = db_session.query(Ownership).filter(Ownership.user_id == user_id)
-    return stations
+    stations = db_session.query(Ownership).filter(Ownership.user_id == user_id).all()
+    res = []
+    for station in stations:
+        res.append(station.station_id)
+    return res
 
 
 def get_user_id_by_name(name):
@@ -91,6 +94,13 @@ def get_full_station_info_by_id(id):
 
 def get_all_user_data_by_name(name):
     data = db_session.query(User).filter(User.name == name).first()
+    if data:
+        return [data.id,data.name,data.password]
+    else:
+        return "No such user"
+
+def get_all_user_data_by_id(id):
+    data = db_session.query(User).filter(User.id == id).first()
     if data:
         return [data.id,data.name,data.password]
     else:
