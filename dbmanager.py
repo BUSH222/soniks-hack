@@ -61,9 +61,9 @@ def update_station_info(station_id, **kwargs):
 
 
 def get_station_owner(station_id):
-    owner_id = db_session.query(Ownership).filter(Ownership.station_id == station_id)[0]
-    owner_name = db_session.query(User).filter(User.id == owner_id).first()
-    return owner_name
+    owner_id = db_session.query(Ownership).filter(Ownership.station_id == station_id).first()
+    owner_name = db_session.query(User).filter(User.id == owner_id.user_id).first()
+    return owner_name.name
 
 
 def get_station_brief_info_by_id(station_id):
@@ -87,10 +87,15 @@ def get_user_id_by_name(name):
         return user.id
     return None
 
-
+def confirm_ownership(user_id,station_id):
+    t = db_session.query(Ownership).filter(Ownership.station_id == station_id and Ownership.user_id == user_id).first()
+    if t.station_id != None:
+        return True
+    return False
 def get_full_station_info_by_id(id):
-    info = db_session.query(Station).filter(Station.id == id)
-    return info
+    info = db_session.query(Station).filter(Station.id == id).first()
+    location = generate_coordinate_id(info.lat, info.long)
+    return [info.id,info.name,location,info.lat,info.long,info.alt]
 
 def get_all_user_data_by_name(name):
     data = db_session.query(User).filter(User.name == name).first()
