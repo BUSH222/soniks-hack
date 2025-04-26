@@ -48,7 +48,7 @@ def login():
         print(user_data)
         if user_data:
             if user_data[2] == password and len(password) < 32:
-                user = User(*user_data)
+                user = User(user_data[1],user_data[2])
                 login_user(user)
                 return redirect(url_for("users",name))
             else:
