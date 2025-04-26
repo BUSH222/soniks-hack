@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/client/static/reception.css">
+
+</head>
+<body>
+    <div class="container">
+        <!-- sidebar -->
+        <div class="sidebar">
+        <!-- panel 1 -->
+        <div class="panel" id="panel1">
+            <h3>Settings</h3>
+            <label for="mhzAmount">Amount (MHz):</label>
+            <input type="number" id="mhzAmount" name="mhzAmount" placeholder="e.g. 100">
+            <button id="setMhzBtn">OK</button>
+            <label for="bandwidth">Bandwidth:</label>
+            <input type="text" id="bandwidth" name="bandwidth" placeholder="e.g. 20 MHz">
+        </div>
+        <!-- panel 2 -->
+        <div class="panel" id="panel2">
+            <h3>Decoding Pipeline</h3>
+            <select id="pipelineSelect" name="pipeline">
+            {% for pipeline in pipelines %}
+                <option value="{{ pipeline.id }}">{{ pipeline.name }}</option>
+            {% endfor %}
+            </select>
+        </div>
+        <!-- panel 3 -->
+        <div class="panel" id="panel3">
+            <h3>Data:</h3>
+            <ul id="dataList" style="max-height: 200px; overflow-y: scroll;">
+            {% for item in data_items %}
+                <li>{{ item }}</li>
+            {% endfor %}
+            </ul>
+            <button id="saveDataBtn">Сохранить</button>
+        </div>
+        </div>
+
+        <!-- content -->
+        <div class="main">
+        <!-- waterfall -->
+        <div class="waterfall">
+            <canvas id="waterfallCanvas"></canvas>
+        </div>
+        <!-- SNR graph and metrics -->
+        <div class="graph">
+            <canvas id="snrGraphCanvas"></canvas>
+            <div class="metrics">
+            <div>SNR: <span id="snrValue">-- dB</span></div>
+            <div>RSSI: <span id="rssiValue">-- dBm</span></div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Include Chart.js or other libs as needed -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Placeholder scripts to initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+        const ctxWaterfall = document.getElementById('waterfallCanvas').getContext('2d');
+        // Initialize waterfall (satellite) chart here
+
+        const ctxSNR = document.getElementById('snrGraphCanvas').getContext('2d');
+        const snrChart = new Chart(ctxSNR, {
+            type: 'line',
+            data: {
+            labels: [],
+            datasets: [{
+                label: 'SNR (dB)',
+                data: [],
+                fill: false,
+                tension: 0.1
+            }]
+            },
+            options: {
+            scales: {
+                y: { title: { display: true, text: 'dB' } },
+                x: { title: { display: true, text: 'Time' } }
+            }
+            }
+        });
+
+        // Hook up (hawk tuah) button events
+        document.getElementById('setMhzBtn').addEventListener('click', () => {
+            const mhz = document.getElementById('mhzAmount').value;
+            console.log('Selected MHz:', mhz);
+        });
+        document.getElementById('saveDataBtn').addEventListener('click', () => {
+            console.log('Save data clicked');
+        });
+        });
+    </script>
+
+    </body>
+</html>
