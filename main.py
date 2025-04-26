@@ -1,5 +1,4 @@
 from flask import Flask, redirect, render_template, request, url_for
-from flask_login import login_required
 from flask_login import (
     login_user,
     LoginManager,
@@ -107,7 +106,7 @@ def map(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
         station_planned_tles = requests.get(
-            f"/api/jobs/?id=&status=&ground_station={id}&start=&end=&satellite__norad_cat_id=&transmitter__uuid=&transmitter__downlink_mode=&transmitter__type=&waterfall_status=&vetted_status=&vetted_user=&observer=&observation_id="
+            f"/api/jobs/?id=&status=&ground_station={id}"
         )
         tles = []
         for i in station_planned_tles:
@@ -131,13 +130,13 @@ def reception(id):
 
 @app.route("/stations/<id>/dashboard/archive", methods=["GET", "POST"])
 @login_required
-def reception(id):
+def archive(id):
     return render_template("archive.html", id=id)
 
 
 @app.route("/stations/<id>/dashboard/settings", methods=["GET", "POST"])
 @login_required
-def reception(id):
+def settings(id):
     if request.method == "GET":
         info = get_station_brief_info_by_id(id)
     if request.method == "POST":
