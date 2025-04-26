@@ -23,6 +23,7 @@ app = Flask(__name__)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
+
 class User(UserMixin):
     def __init__(self, id, username, password):
         self.id = id
