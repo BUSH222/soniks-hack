@@ -9,8 +9,8 @@ create table if not exists "user"(
 create table if not exists station(
     id serial primary key,
     name VARCHAR(32) NOT NULL,
-    lat INT NOT NULL,
-    long INT NOT NULL,
+    lat FLOAT NOT NULL,
+    long FLOAT NOT NULL,
     alt INT NOT NULL,
     notify_mail Boolean,
     notify_tg Boolean,
