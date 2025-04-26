@@ -33,7 +33,7 @@ class User(UserMixin):
 
 @app.route("/")
 def index():
-    return render_template("login_with.html")
+    return render_template("login.html")
 
 
 @app.route("/login_password", methods=["GET", "POST"])
@@ -62,7 +62,7 @@ def logout():
 
 @app.route("/")
 def main():
-    return "main.html"
+    return "dashboard.html" # was main.html
 
 
 @app.route("/users/<current_user.name>", methods=["GET", "POST"])

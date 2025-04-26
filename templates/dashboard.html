@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Дэшборд{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- dashboard sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse vh-100 d-flex flex-column justify-content-between p-0 shadow-sm">
+            <div>
+                <ul class="nav flex-column pt-3">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'map' %}active{% endif %}" href="{{ url_for('station_map', station_id=station.id) }}">
+                            Карта
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'reception' %}active{% endif %}" href="{{ url_for('station_reception', station_id=station.id) }}">
+                            Прием сигналов
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'archive' %}active{% endif %}" href="{{ url_for('station_archive', station_id=station.id) }}">
+                            Архив и аналитика
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'control' %}active{% endif %}" href="{{ url_for('station_control', station_id=station.id) }}">
+                            Управление
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" href="{{ url_for('station_settings', station_id=station.id) }}">
+                            Настройки
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- stations dropdown -->
+            <div class="border-top p-3">
+                <div class="dropdown">
+                    <button class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center" type="button" id="stationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ station.id }} | {{ station.name }}
+                        <i class="bi bi-caret-down-fill"></i>
+                    </button>
+                    <ul class="dropdown-menu w-100" aria-labelledby="stationDropdown">
+                        {% for user_station in user_stations %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('station_dashboard', station_id=user_station.id) }}">
+                                {{ user_station.id }} | {{ user_station.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- iframe -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="iframe-container" style="height: 85vh;">
+                <iframe src="{{ iframe_src }}" class="w-100 h-100 border rounded" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </main>
+
+    </div>
+</div>
+
+{% endblock %}
