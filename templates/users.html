@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Мои станции{% endblock %}
+{% block content %}
+
+<main class="container my-5">
+
+    <h1 class="mb-4 text-center">МОИ СТАНЦИИ</h1>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Название</th>
+                    <th scope="col">Координаты</th>
+                    <th scope="col">Наблюдения</th>
+                    <th scope="col">Будущие</th>
+                    <th scope="col">Антенны</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for station in stations %}
+                <tr>
+                    <th scope="row">{{ station.id }}</th>
+                    <td>
+                        <a href="{{ url_for('station_detail', station_id=station.id) }}" class="text-decoration-none">
+                            {{ station.name }}
+                        </a>
+                    </td>
+                    <td>{{ station.coordinates }}</td>
+                    <td>{{ station.observations_count }}</td>
+                    <td>{{ station.future_count }}</td>
+                    <td>{{ station.antennas }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Станции{% endblock %}
+{% block content %}
+
+<main class="container my-5">
+
+    <!-- tabs -->
+    <ul class="nav nav-tabs justify-content-center mb-4" id="stationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">Информация</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">Статистика</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="observations-tab" data-bs-toggle="tab" data-bs-target="#observations" type="button" role="tab">Наблюдения</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transmitters-tab" data-bs-toggle="tab" data-bs-target="#transmitters" type="button" role="tab">Передатчики</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">Дэшборд</button>
+        </li>
+    </ul>
+
+    <!-- tab content -->
+    <div class="tab-content" id="stationTabsContent">
+        <!-- info tab -->
+        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Информация о станции</h2>
+        
+                    <div class="row">
+                        <!-- left side (station info) -->
+                        <div class="col-md-7">
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Владелец</div>
+                                <div class="col-6">{{ owner_name }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">QTH-локатор</div>
+                                <div class="col-6">{{ qth_locator }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Координаты</div>
+                                <div class="col-6">{{ coordinates }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Высота</div>
+                                <div class="col-6">{{ altitude }} м</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Минимальный горизонт</div>
+                                <div class="col-6">{{ angle }}°</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Антенны</div>
+                                <div class="col-6">{{ antennas }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Успешность</div>
+                                <div class="col-6">{{ success_rate }}%</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Наблюдения</div>
+                                <div class="col-6">{{ observations_count }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Дата создания</div>
+                                <div class="col-6">{{ creation_date }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Статус</div>
+                                <div class="col-6">
+                                    {% if online %}
+                                        <span class="text-success">В сети</span>
+                                    {% else %}
+                                        <span class="text-danger">Не в сети</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Время работы</div>
+                                <div class="col-6">{{ uptime }}</div>
+                            </div>
+                        </div>
+        
+                        <!-- right side -->
+                        <div class="col-md-5 text-center">
+                            <!-- station picture -->
+                            <img src="{{ station_picture_url or '/static/img/no_pic.png' }}" 
+                                 class="img-fluid rounded mb-3" 
+                                 alt="Фото станции" style="max-height: 250px; object-fit: cover;">
+        
+                            <!-- map -->
+                            <div class="border rounded" style="height: 200px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                <span class="text-muted">Карта станции</span>
+                            </div>
+                        </div>
+                    </div>
+        
+                </div>
+            </div>
+        </div>        
+        
+
+
+        <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
+            <h2>Статистика станции</h2>
+            <p>Графики и общая статистика работы станции.</p>
+        </div>
+        <div class="tab-pane fade" id="observations" role="tabpanel" aria-labelledby="observations-tab">
+            <h2>Наблюдения станции</h2>
+            <p>Список всех наблюдений этой станции.</p>
+        </div>
+        <div class="tab-pane fade" id="transmitters" role="tabpanel" aria-labelledby="transmitters-tab">
+            <h2>Передатчики станции</h2>
+            <p>Информация о передатчиках, которые были приняты станцией.</p>
+        </div>
+        <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+            <h2>Дэшборд станции</h2>
+            <p>iframe для мониторинга станции через dashboard</p>
+        </div>
+    </div>
+
+</main>
+
+{% endblock %}
