@@ -3,6 +3,7 @@ create table if not exists "user"(
     name VARCHAR(32) NOT NULL,
     password VARCHAR(32) UNIQUE NOT NULL,
     tg VARCHAR(32),
+    api_key VARCHAR(32) UNIQUE,
     email VARCHAR(32)
 );
 
