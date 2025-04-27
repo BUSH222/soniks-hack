@@ -80,7 +80,6 @@ def get_stations_by_user_id(user_id):
         res.append(station.station_id)
     return res
 
-
 def get_user_id_by_name(name):
     user = db_session.query(User).filter(User.name == name).first()
     if user:
