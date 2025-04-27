@@ -5,12 +5,25 @@
   <title>WebSocket Demo</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/nicolaspanel/numjs@0.15.1/dist/numjs.min.js"></script>
+  <script src="/static/jsfft.bundle.js"></script>
 </head>
+<script>
+  const fft = new jsfft.ComplexArray(512);
+  console.log(fft);
+</script>
 <body>
   <h1>WebSocket Client</h1>
   <canvas id="frequencyChart" width="800" height="400"></canvas>
   <script>
-    // Chart.js initialization
+    // Basic parameters
+    const SAMPLE_RATE = 2.048e6;
+    const N = 1024;
+
+    // Copy the global FFT constructor into a local variable
+    // (Confirm 'window.FFT' is how fft.js is exposed by your build)
+    const FFTConstructor = window.FFT; 
+
+    // Chart initialization
     const ctx = document.getElementById('frequencyChart').getContext('2d');
     const frequencyChart = new Chart(ctx, {
       type: 'line',
@@ -26,13 +39,15 @@
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         scales: {
           x: {
             type: 'linear',
             title: {
               display: true,
-              text: 'Frequency (Hz)'
+              text: 'Frequency (Hz)',
+              min: -SAMPLE_RATE / 2,
+              max:  SAMPLE_RATE / 2
             }
           },
           y: {
@@ -43,22 +58,12 @@
           }
         },
         plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          }
+          legend: { display: true, position: 'top' }
         }
       }
     });
 
-    // Basic parameters
-    const SAMPLE_RATE = 2.048e6;
-    const N = 1024;  // Must match your server's block size if you want a clean FFT
-    const FREQ_RESOLUTION = SAMPLE_RATE / N;
-
-    // -------------------------------
-    // (1) WebSocket to receive raw IQ data
-    // -------------------------------
+    // WebSocket connection
     const ws = new WebSocket("ws://localhost:8000/hi");
 
     ws.onopen = () => {
@@ -67,35 +72,41 @@
 
     ws.onmessage = (event) => {
       event.data.arrayBuffer().then((buffer) => {
-        // Convert raw binary data to int8
+        // Convert raw binary data (I/Q) to Int8
         const decodedData = new Int8Array(buffer);
-        console.log("Decoded Data:", decodedData);
 
-        // Convert to interleaved IQ samples: [I0, Q0, I1, Q1, ...]
-        const iqArray = nj.zeros([decodedData.length / 2, 2]); // Nx2
+        // Interleave I and Q into iqArray
+        const iqArray = nj.zeros([decodedData.length / 2, 2]);
         for (let i = 0, j = 0; i < decodedData.length; i += 2, j++) {
-          iqArray.set(j, 0, decodedData[i]);     // I
-          iqArray.set(j, 1, decodedData[i + 1]); // Q
+          iqArray.set(j, 0, decodedData[i]);
+          iqArray.set(j, 1, decodedData[i + 1]);
         }
 
-        // Optional: keep only the first N samples for the FFT
+        // Keep first N samples for FFT
         const sliceLength = Math.min(N, iqArray.shape[0]);
         const truncatedIQ = iqArray.slice([0, sliceLength], [0, 2]);
 
-        // Apply a window if desired (simple Hann window example)
-        const windowedIQ = applyWindow(truncatedIQ, sliceLength);
+        // Apply Hann window
+        applyWindow(truncatedIQ, sliceLength);
 
-        // Compute FFT (returns {real, imag})
-        const fftResult = fft(windowedIQ, sliceLength);
+        // Set up fft.js arrays
+        const f = new FFTConstructor(sliceLength);
+        const inputComplex = f.createComplexArray();
+        const outputComplex = f.createComplexArray();
 
-        // Convert to power (dB)
-        const { freqs, powerdB } = computePowerSpectrum(
-          fftResult.real, 
-          fftResult.imag, 
-          SAMPLE_RATE
-        );
+        // Fill inputComplex with real=I, imag=Q
+        for (let k = 0, cIndex = 0; k < sliceLength; k++) {
+          inputComplex[cIndex++] = truncatedIQ.get(k, 0); // I
+          inputComplex[cIndex++] = truncatedIQ.get(k, 1); // Q
+        }
 
-        // Update Chart.js
+        // Perform FFT
+        f.transform(outputComplex, inputComplex);
+
+        // Convert to power (dB) and shift 0 Hz to center
+        const { freqs, powerdB } = computePowerSpectrum(outputComplex, SAMPLE_RATE);
+
+        // Update the chart
         frequencyChart.data.labels = freqs;
         frequencyChart.data.datasets[0].data = powerdB;
         frequencyChart.update();
@@ -106,98 +117,34 @@
       console.log("WebSocket closed");
     };
 
-    // -------------------------------
-    // (2) Simple window function
-    // -------------------------------
+    // Hann window
     function applyWindow(iqArray, length) {
-      // Hann window
       for (let n = 0; n < length; n++) {
         const winVal = 0.5 * (1 - Math.cos((2 * Math.PI * n) / (length - 1)));
         iqArray.set(n, 0, iqArray.get(n, 0) * winVal);
         iqArray.set(n, 1, iqArray.get(n, 1) * winVal);
       }
-      return iqArray;
     }
 
-    // -------------------------------
-    // (3) Minimal FFT implementation (Recursive Cooley-Tukey)
-    //     For demonstration only. Use a tested library for production.
-    // -------------------------------
-    function fft(iqArray, length) {
-      // Separate real/imag arrays from (I, Q)
-      let real = new Float32Array(length);
-      let imag = new Float32Array(length);
-      for (let i = 0; i < length; i++) {
-        real[i] = iqArray.get(i, 0);
-        imag[i] = iqArray.get(i, 1);
-      }
-
-      fftRecursive(real, imag);
-
-      return { real, imag };
-    }
-
-    // Recursive in-place Cooley-Tukey
-    function fftRecursive(real, imag) {
-      const n = real.length;
-      if (n <= 1) return;
-
-      // Divide array into even and odd
-      const half = n >> 1;
-      let evenReal = new Float32Array(half);
-      let evenImag = new Float32Array(half);
-      let oddReal  = new Float32Array(half);
-      let oddImag  = new Float32Array(half);
-
-      for (let i = 0; i < half; i++) {
-        evenReal[i] = real[i * 2];
-        evenImag[i] = imag[i * 2];
-        oddReal[i]  = real[i * 2 + 1];
-        oddImag[i]  = imag[i * 2 + 1];
-      }
-
-      fftRecursive(evenReal, evenImag);
-      fftRecursive(oddReal, oddImag);
-
-      // Combine
-      for (let k = 0; k < half; k++) {
-        const tReal =  Math.cos(-2 * Math.PI * k / n) * oddReal[k] 
-                      - Math.sin(-2 * Math.PI * k / n) * oddImag[k];
-        const tImag =  Math.sin(-2 * Math.PI * k / n) * oddReal[k] 
-                      + Math.cos(-2 * Math.PI * k / n) * oddImag[k];
-        real[k]         = evenReal[k] + tReal;
-        imag[k]         = evenImag[k] + tImag;
-        real[k + half]  = evenReal[k] - tReal;
-        imag[k + half]  = evenImag[k] - tImag;
-      }
-    }
-
-    // -------------------------------
-    // (4) Compute frequency bins & power (dB)
-    // -------------------------------
-    function computePowerSpectrum(real, imag, sampleRate) {
-      // Shift the FFT so 0 Hz is in the middle
-      const n = real.length;
+    // Convert complex FFT output to frequency vs power arrays
+    function computePowerSpectrum(outputComplex, sampleRate) {
+      const n = outputComplex.length >> 1;
       const half = n >> 1;
 
-      // Magnitude array
-      const magnitude = new Array(n);
-      for (let i = 0; i < n; i++) {
-        magnitude[i] = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]) || 1e-9; // avoid log(0)
+      const magnitude = new Float32Array(n);
+      for (let i = 0, idx = 0; i < n; i++) {
+        const re = outputComplex[idx++];
+        const im = outputComplex[idx++];
+        magnitude[i] = 20 * Math.log10(Math.sqrt(re * re + im * im) || 1e-9);
       }
 
-      // Create a frequency axis from -sampleRate/2 to +sampleRate/2
-      const freqs = new Array(n);
-      const powerdB = new Array(n);
+      // Shift 0 Hz to center
+      const freqs = [];
+      const powerdB = [];
       for (let i = 0; i < n; i++) {
-        // Index shifted to center
-        const idxShifted = (i + half) % n; 
-        // Convert magnitude to dB
-        powerdB[i] = 20 * Math.log10(magnitude[idxShifted]);
-
-        // Map index to frequency in Hz
-        // Range: -sampleRate/2 ... sampleRate/2
-        freqs[i] = ((i - half) * sampleRate) / n;
+        const idxShifted = (i + half) % n;
+        freqs[i]  = ((i - half) * sampleRate) / n;
+        powerdB[i] = magnitude[idxShifted];
       }
 
       return { freqs, powerdB };
