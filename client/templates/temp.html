@@ -17,7 +17,7 @@
     const ctx = canvas.getContext('2d');
 
     // Open the WebSocket
-    const ws = new WebSocket("ws://localhost:8000/hi");
+    const ws = new WebSocket("/hi");
 
     ws.onopen = () => {
       console.log("WebSocket connected");
