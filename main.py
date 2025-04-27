@@ -27,8 +27,8 @@ import requests
 
 
 
-#init_bd()
-#populate_base_data()
+init_bd()
+populate_base_data()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'

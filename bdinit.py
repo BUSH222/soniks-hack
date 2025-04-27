@@ -20,10 +20,10 @@ def populate_base_data():
     except Exception as e:
         raise e
     user_id = db_session.query(User).first().id
-    station_id = db_session.query(Station).all()[len(station_id)-1].id
+    station_id = db_session.query(Station).all()[0].id
     bob_own = Ownership(user_id=user_id,station_id=station_id)
     user_id = db_session.query(User).first().id
-    station_id = db_session.query(Station).all()[len(station_id)-1].id
+    station_id = db_session.query(Station).all()[0].id
     nana_own = Ownership(user_id=user_id,station_id=station_id)
     db_session.add_all([bob_own,nana_own])
     try:
