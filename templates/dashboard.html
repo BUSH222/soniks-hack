@@ -9,27 +9,23 @@
             <div>
                 <ul class="nav flex-column pt-3">
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'map' %}active{% endif %}" href="{{ url_for('station_map', station_id=station.id) }}">
+                        <a class="nav-link {% if active_tab == 'map' %}active{% endif %}" href="{{ url_for('map', id=station_id) }}">
                             Карта
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'reception' %}active{% endif %}" href="{{ url_for('station_reception', station_id=station.id) }}">
+                        <a class="nav-link {% if active_tab == 'reception' %}active{% endif %}" href="{{ url_for('reception', id=station_id) }}">
                             Прием сигналов
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'archive' %}active{% endif %}" href="{{ url_for('station_archive', station_id=station.id) }}">
+                        <a class="nav-link {% if active_tab == 'archive' %}active{% endif %}" href="{{ url_for('archive', id=station_id) }}">
                             Архив и аналитика
                         </a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'control' %}active{% endif %}" href="{{ url_for('station_control', station_id=station.id) }}">
-                            Управление
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" href="{{ url_for('station_settings', station_id=station.id) }}">
+                        <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" href="{{ url_for('settings', id=station_id) }}">
                             Настройки
                         </a>
                     </li>
@@ -40,15 +36,15 @@
             <div class="border-top p-3">
                 <div class="dropdown">
                     <button class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center" type="button" id="stationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        {{ station.id }} | {{ station.name }}
+                        {{ id }} | {{ name }}
                         <i class="bi bi-caret-down-fill"></i>
                     </button>
                     <ul class="dropdown-menu w-100" aria-labelledby="stationDropdown">
                         {% for user_station in user_stations %}
                         <li>
-                            <a class="dropdown-item" href="{{ url_for('station_dashboard', station_id=user_station.id) }}">
-                                {{ user_station.id }} | {{ user_station.name }}
-                            </a>
+                            <a class="dropdown-item" href="{{ url_for('station_dashboard', id=user_station[0]) }}">
+                                {{ user_station[0] }} | {{ user_station[1] }}
+                            </a> 
                         </li>
                         {% endfor %}
                     </ul>
