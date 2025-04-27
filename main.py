@@ -137,8 +137,8 @@ def map(id):
             f"https://sonik.space/api/jobs/?id=&status=&ground_station={id}"
         )
         tles = []
-        print(station_planned_tles.json())
-        for i in station_planned_tles.json():
+        print(station_planned_tles)
+        for i in station_planned_tles:
             res = {}
             res["tle0"] = i["tle0"]
             res["tle1"] =i["tle1"]
@@ -170,13 +170,13 @@ def settings(id):
     if request.method == "GET":
         info = get_station_brief_info_by_id(id)
     if request.method == "POST":
-        info = request.json()
+        info = request.json
         mail = info["notify_mail"]
         tg = info["notify_tg"]
-        time = info["early_time"]
-        key = info["api_key"]
+        time = int(info["early_time"])
+        #key = info["api_key"]
         update_station_info(
-            id, notify_mail=mail, notify_tg=tg, early_time=time,api_key=key)
+            id, notify_mail=mail, notify_tg=tg, early_time=time)
 
     return render_template("settings.html", info=info)
 
@@ -202,7 +202,7 @@ def edit_station(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
     if request.method == "POST":
-        info = request.json()
+        info = request.json
         name = info["name"]
         lat = info["lat"]
         long = info["long"]
