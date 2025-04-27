@@ -7,12 +7,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const notifyMinutes = document.getElementById("notifyMinutes").value;
 
         const data = {
-            email_enabled: emailEnabled,
-            telegram_enabled: telegramEnabled,
-            notify_minutes: notifyMinutes
+            notify_mail: emailEnabled,
+            notify_tg: telegramEnabled,
+            early_time: notifyMinutes
         };
 
-        fetch("/save_settings", {
+        fetch(window.location.href , {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(response => {
             if (response.ok) {
-                window.location.href = "/settings";
+                alert("Настройки усепшно сохранены");
             } else {
                 alert("Ошибка сохранения настроек!");
             }
