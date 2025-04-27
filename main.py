@@ -7,6 +7,7 @@ from flask_login import (
     UserMixin,
     logout_user,
 )
+from bdinit import init_bd,populate_base_data
 from dbmanager import (
     get_all_user_data_by_name,
     confirm_ownership,
@@ -17,8 +18,13 @@ from dbmanager import (
     get_full_station_info_by_id,
     get_station_owner,
     update_station_info,
+    
 )
 import requests
+
+
+init_bd()
+populate_base_data()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
