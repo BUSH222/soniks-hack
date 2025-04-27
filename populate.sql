@@ -1,6 +1,6 @@
 insert into "user" (name,password) values
 ('Bob','123'),
-('Lena Golovach','123'),
+('Lena Golovach','1243'),
 ('Affri','1448');
 
 insert into "station"  (name,lat,long,alt) values

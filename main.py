@@ -17,6 +17,7 @@ from dbmanager import (
     get_station_brief_info_by_id,
     get_full_station_info_by_id,
     get_station_owner,
+    register_sdr_bd,
     update_station_info,
     
 )
@@ -24,8 +25,8 @@ import requests
 
 
 
-init_bd()
-populate_base_data()
+#init_bd()
+#populate_base_data()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -175,6 +176,20 @@ def settings(id):
 
     return render_template("settings.html", info=info)
 
+
+
+
+@app.route("/stations/<id>/register_sdr", methods=["GET", "POST"])
+@login_required
+def register_sdr(id):
+    if request.method == "GET":
+        sdr = request.args.get('address')
+        print(sdr)
+        if sdr and confirm_ownership(current_user.id,id):
+            register_sdr_bd(id,sdr)
+            return {"Status":"Ok"}
+        else:
+            return {"Status":"Fail"}
 
 @app.route("/stations/edit/<id>", methods=["GET", "POST"])
 @login_required

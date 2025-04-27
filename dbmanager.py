@@ -17,7 +17,7 @@ class User(Base):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    password = Column(String)
+    password = Column(String,unique=True)
     tg = Column(String)
     email = Column(String)
 
@@ -65,6 +65,15 @@ def get_station_owner(station_id):
     owner_name = db_session.query(User).filter(User.id == owner_id.user_id).first()
     return owner_name.name
 
+def register_sdr_bd(sid,sdr):
+    station = db_session.query(Station).filter(Station.id == sid).first()
+    if station:
+        station.sdr_server_address = sdr
+    try:
+        db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        raise e
 
 def get_station_brief_info_by_id(station_id):
     station = db_session.query(Station).filter(Station.id == station_id).first()

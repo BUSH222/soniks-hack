@@ -1,7 +1,7 @@
 create table if not exists "user"(
     id serial primary key,
     name VARCHAR(32) NOT NULL,
-    password VARCHAR(32) NOT NULL,
+    password VARCHAR(32) UNIQUE NOT NULL,
     tg VARCHAR(32),
     email VARCHAR(32)
 );
