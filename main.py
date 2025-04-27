@@ -23,6 +23,7 @@ from dbmanager import (
 import requests
 
 
+
 init_bd()
 populate_base_data()
 
@@ -99,7 +100,7 @@ def user_stations(name):
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
 def station(id):
-    if confirm_ownership(current_user.id, id):
+    if confirm_ownership(current_user.id,id):
         change_button = True
     if request.method == "GET":
         owner = get_station_owner(id)
@@ -110,7 +111,17 @@ def station(id):
 @app.route("/stations/<id>/dashboard", methods=["GET", "POST"])
 @login_required
 def station_dashboard(id):
-    return render_template("dashboard.html", id=id)
+    user_id = current_user.id
+    info = []
+    stations_id = get_stations_by_user_id(user_id)
+    print(f"id:{user_id}")
+    print(f"stat:{stations_id}")
+    for id in stations_id:
+        ex = get_station_brief_info_by_id(id)
+        info.append(ex)
+    
+    name = get_station_brief_info_by_id(id)[1]
+    return render_template("dashboard.html", station_id=id,name=name,user_stations=info)
 
 
 @app.route("/stations/<id>/dashboard/map", methods=["GET", "POST"])
@@ -119,15 +130,16 @@ def map(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
         station_planned_tles = requests.get(
-            f"/api/jobs/?id=&status=&ground_station={id}"
+            f"https://sonik.space/api/jobs/?id=&status=&ground_station={id}"
         )
         tles = []
-        for i in station_planned_tles:
+        print(station_planned_tles.json())
+        for i in station_planned_tles.json():
             res = {}
-            res["tle0"] = station_planned_tles["tle0"]
-            res["tle1"] = station_planned_tles["tle1"]
-            res["tle2"] = station_planned_tles["tle2"]
-            stat_inf = get_station_brief_info_by_id(id)
+            res["tle0"] = i["tle0"]
+            res["tle1"] =i["tle1"]
+            res["tle2"] = i["tle2"]
+            stat_inf = get_full_station_info_by_id(id)
             res["lat"] = stat_inf[2]
             res["long"] = stat_inf[3]
             res["alt"] = stat_inf[4]
