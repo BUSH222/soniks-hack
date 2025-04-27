@@ -45,30 +45,20 @@ class WebSocketSink(gr.sync_block):
         gr.sync_block.__init__(
             self,
             name="WebSocketSink",
-            in_sig=[np.complex64],  # Accept raw I/Q complex data
+            in_sig=[np.complex64],
             out_sig=None
         )
 
     def work(self, input_items, output_items):
-        # input_items[0] is a numpy array of complex64
         iq_data = input_items[0]
-        # For demonstration, compute an FFT for the entire block
-        # (In practice, chunk appropriately or buffer across calls)
-        # Example using numpy.fft:
         fft_result = np.fft.fftshift(np.fft.fft(iq_data))
         magnitude = 20 * np.log10(np.abs(fft_result) + 1e-9)
-
-        # Convert to float32 bytes or pick another format (e.g. JSON)
-        # The client can parse Float32Array on the frontend
         payload = magnitude.astype(np.float32).tobytes()
-
-        # Store the payload for the WebSocket route to send
         asyncio.run(self.send_data(payload))
         return len(iq_data)
 
     async def send_data(self, data):
         global retransmitted_data
-        # Overwrite or append depending on your preference
         retransmitted_data = data
 
 
@@ -135,12 +125,10 @@ def send_data(ws):
             sdr_thread.join()
             sdr_thread = None
         print("WebSocket closed, SDR stopped")
-        
 
 
 def start_sdr(frequency):
     global sdr_thread_stop_event, sdr_instance
-    # Create an instance of SDRToWebSocket and store it in the global variable
     sdr_instance = SDRToWebSocket(frequency, SAMPLE_RATE, BANDWIDTH)
     sdr_instance.start()
     print("Sending FFT data to an internal buffer (retransmitted_data)")
@@ -152,7 +140,7 @@ def start_sdr(frequency):
     finally:
         sdr_instance.stop()
         sdr_instance.wait()
-        sdr_instance = None 
+        sdr_instance = None
 
 
 if __name__ == '__main__':

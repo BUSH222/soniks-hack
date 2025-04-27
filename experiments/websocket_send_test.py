@@ -5,6 +5,7 @@ import osmosdr
 import time
 from gnuradio import gr, blocks
 
+
 class SDRToWebSocket(gr.top_block):
     def __init__(self, center_freq, samp_rate, bandwidth, ws_uri):
         super().__init__()
@@ -42,6 +43,7 @@ class WebSocketSink(gr.sync_block):
     async def send_data(self, data):
         async with websockets.connect(self.ws_uri) as ws:
             await ws.send(data)
+
 
 if __name__ == "__main__":
     CENTER_FREQ = 100.1e6
