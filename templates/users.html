@@ -20,19 +20,20 @@
             </thead>
             <tbody>
                 {% for station in stations %}
-                <tr>
+                <tr data-station-id="{{ station[0] }}">
                     <th scope="row">{{ station[0] }}</th>
                     <td>{{ station[1] }}</td>
                     <td>{{ station[2] }}</td>
-                    
-                    
-
+                    <td>{{ station[3] }}</td>
+                    <td>{{ station[4] }}</td>
+                    <td>{{ station[5] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
+    <script src="{{ url_for('static', filename='/users.js') }}"></script>
 </main>
 
 {% endblock %}

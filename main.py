@@ -99,7 +99,7 @@ def user_stations(name):
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
 def station(id):
-    if confirm_ownership(current_user.id,id):
+    if confirm_ownership(current_user.id, id):
         change_button = True
     if request.method == "GET":
         owner = get_station_owner(id)
