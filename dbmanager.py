@@ -39,10 +39,10 @@ class Ownership(Base):
     __tablename__ = "ownership"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("user.id"))
-    station_id = Column(Integer, ForeignKey("stations.id"))
+    station_id = Column(Integer, ForeignKey("station.id"))
 
 
-engine = create_engine("postgresql://postgres:postgres@localhost/goida")
+engine = create_engine("postgresql://postgres:postgres@localhost/soniks")
 Session = sessionmaker(bind=engine)
 db_session = Session()
 
