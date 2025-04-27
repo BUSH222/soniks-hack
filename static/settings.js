@@ -5,11 +5,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const emailEnabled = document.getElementById("emailSwitch").checked;
         const telegramEnabled = document.getElementById("telegramSwitch").checked;
         const notifyMinutes = document.getElementById("notifyMinutes").value;
+        const api_key = document.getElementById("apiKeyInput").value;
 
         const data = {
             notify_mail: emailEnabled,
             notify_tg: telegramEnabled,
-            early_time: notifyMinutes
+            early_time: notifyMinutes,
+            api_key:api_key
         };
 
         fetch(window.location.href , {

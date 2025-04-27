@@ -59,7 +59,15 @@ def update_station_info(station_id, **kwargs):
     except Exception as e:
         db_session.rollback()
         raise e
-
+def update_api_key(user_id,api_key):
+    user = db_session.query(User).filter(User.id == user_id).first()
+    user.api_key = api_key
+    print(user.id,api_key)
+    try:
+        db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        raise e
 
 def check_api_key(key,station_id):
     user_with_api = db_session.query(User).filter(User.api_key == key).first()

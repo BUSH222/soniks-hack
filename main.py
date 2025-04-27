@@ -19,7 +19,8 @@ from dbmanager import (
     get_station_owner,
     register_sdr_bd,
     update_station_info,
-    check_api_key
+    check_api_key,
+    update_api_key
     
 )
 import requests
@@ -137,8 +138,8 @@ def map(id):
             f"https://sonik.space/api/jobs/?id=&status=&ground_station={id}"
         )
         tles = []
-        print(station_planned_tles)
-        for i in station_planned_tles:
+        print(station_planned_tles.json)
+        for i in station_planned_tles.json:
             res = {}
             res["tle0"] = i["tle0"]
             res["tle1"] =i["tle1"]
@@ -173,10 +174,12 @@ def settings(id):
         info = request.json
         mail = info["notify_mail"]
         tg = info["notify_tg"]
-        time = int(info["early_time"])
-        #key = info["api_key"]
+        time = info["early_time"]
+        key = info["api_key"]
         update_station_info(
             id, notify_mail=mail, notify_tg=tg, early_time=time)
+        if key!='':
+            update_api_key(current_user.id,key)
 
     return render_template("settings.html", info=info)
 
