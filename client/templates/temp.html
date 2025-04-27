@@ -8,7 +8,6 @@
   <h1>WebSocket Client (Canvas Plot)</h1>
   <!-- Manually sized canvas for drawing frequency (x) vs power (y) -->
   <canvas id="frequencyCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
-
   <script>
     // Basic parameters
     const SAMPLE_RATE = 1.024e6;
@@ -52,7 +51,7 @@
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw dots
+        // Draw vertical bars
         ctx.fillStyle = '#0080ff';
         for (let i = 0; i < n; i++) {
           // Map freqAxis[i] from [freqMin, freqMax] to [0, canvas.width]
@@ -60,8 +59,8 @@
           // Invert y so higher dB is higher on the canvas
           const y = canvas.height - (floatData[i] - dbMin) / (dbMax - dbMin) * canvas.height;
 
-          // Draw a small 1x1 rect (or a small circle) to represent the dot
-          ctx.fillRect(x, y, 1, 1);
+          // Draw a vertical bar from the dot to the bottom of the canvas
+          ctx.fillRect(x, y, 1, canvas.height - y);
         }
       });
     };
