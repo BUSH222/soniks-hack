@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chart.js Example</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/client/static/reception.css">
+    <link rel="stylesheet" href="/static/reception.css">
 
 </head>
 <body>
@@ -15,11 +15,11 @@
         <!-- panel 1 -->
         <div class="panel" id="panel1">
             <h3>Settings</h3>
-            <label for="mhzAmount">Amount (MHz):</label>
+            <label for="mhzAmount">Frequency (MHz):</label>
             <input type="number" id="mhzAmount" name="mhzAmount" placeholder="e.g. 100">
             <button id="setMhzBtn">OK</button>
             <label for="bandwidth">Bandwidth:</label>
-            <input type="number" id="bandwidth" value="2.048" />
+            <input type="number" id="bandwidth" value="1.024" readonly/>
         </div>
         <!-- panel 2 -->
         <div class="panel" id="panel2">
@@ -46,7 +46,8 @@
         <div class="main">
         <!-- waterfall -->
         <div class="waterfall">
-            <canvas id="waterfallCanvas"></canvas>
+            <canvas id="frequencyCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
+            <canvas id="waterfallCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
         </div>
         <!-- SNR graph and metrics -->
         <div class="graph">
@@ -60,6 +61,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/reception.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
         const ctxWaterfall = document.getElementById('waterfallCanvas').getContext('2d');

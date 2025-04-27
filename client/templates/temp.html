@@ -8,13 +8,18 @@
   <h1>WebSocket Client (Canvas Plot)</h1>
   <!-- Manually sized canvas for drawing frequency (x) vs power (y) -->
   <canvas id="frequencyCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
+  <br>
+  <canvas id="waterfallCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
   <script>
     // Basic parameters
     const SAMPLE_RATE = 1.024e6;
 
-    // Access the canvas and its 2D rendering context
-    const canvas = document.getElementById('frequencyCanvas');
-    const ctx = canvas.getContext('2d');
+    // Access the canvas and its 2D rendering contexts
+    const frequencyCanvas = document.getElementById('frequencyCanvas');
+    const frequencyCtx = frequencyCanvas.getContext('2d');
+
+    const waterfallCanvas = document.getElementById('waterfallCanvas');
+    const waterfallCtx = waterfallCanvas.getContext('2d');
 
     // Open the WebSocket
     const ws = new WebSocket("/hi");
@@ -48,19 +53,48 @@
           if (floatData[i] > dbMax) dbMax = floatData[i];
         }
 
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear frequency canvas
+        frequencyCtx.clearRect(0, 0, frequencyCanvas.width, frequencyCanvas.height);
 
-        // Draw vertical bars
-        ctx.fillStyle = '#0080ff';
+        // Draw vertical bars on frequency canvas
+        frequencyCtx.fillStyle = '#0080ff';
         for (let i = 0; i < n; i++) {
           // Map freqAxis[i] from [freqMin, freqMax] to [0, canvas.width]
-          const x = (freqAxis[i] - freqMin) / (freqMax - freqMin) * canvas.width;
+          const x = (freqAxis[i] - freqMin) / (freqMax - freqMin) * frequencyCanvas.width;
           // Invert y so higher dB is higher on the canvas
-          const y = canvas.height - (floatData[i] - dbMin) / (dbMax - dbMin) * canvas.height;
+          const y = frequencyCanvas.height - (floatData[i] - dbMin) / (dbMax - dbMin) * frequencyCanvas.height;
 
           // Draw a vertical bar from the dot to the bottom of the canvas
-          ctx.fillRect(x, y, 1, canvas.height - y);
+          frequencyCtx.fillRect(x, y, 1, frequencyCanvas.height - y);
+        }
+
+        // Scroll the waterfall canvas downward
+        const imageData = waterfallCtx.getImageData(0, 0, waterfallCanvas.width, waterfallCanvas.height - 1);
+        waterfallCtx.putImageData(imageData, 0, 1);
+
+        // Draw the new row of data at the top of the waterfall canvas
+        for (let i = 0; i < n; i++) {
+          // Map freqAxis[i] from [freqMin, freqMax] to [0, canvas.width]
+          const x = (freqAxis[i] - freqMin) / (freqMax - freqMin) * waterfallCanvas.width;
+          // Map floatData[i] from [dbMin, dbMax] to a color intensity
+          const intensity = (floatData[i] - dbMin) / (dbMax - dbMin);
+
+          // Map intensity to a color gradient
+          let color;
+          if (intensity > 0.8) {
+            color = `rgb(255, ${Math.floor(255 * (1 - intensity))}, 0)`; // Red to Orange
+          } else if (intensity > 0.6) {
+            color = `rgb(255, 255, ${Math.floor(255 * (1 - intensity))})`; // Orange to Yellow
+          } else if (intensity > 0.4) {
+            color = `rgb(${Math.floor(255 * intensity)}, 255, 255)`; // Yellow to White
+          } else if (intensity > 0.2) {
+            color = `rgb(0, ${Math.floor(255 * intensity)}, 255)`; // White to Light Blue
+          } else {
+            color = `rgb(0, 0, ${Math.floor(255 * intensity)})`; // Light Blue to Dark Blue
+          }
+
+          waterfallCtx.fillStyle = color;
+          waterfallCtx.fillRect(x, 0, 1, 1); // Draw at the top of the canvas
         }
       });
     };

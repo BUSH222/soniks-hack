@@ -4,7 +4,7 @@ import time
 import threading
 from flask import Flask, request, render_template
 from flask_sock import Sock
-from gnuradio import gr, blocks
+from gnuradio import gr
 import osmosdr
 # from scipy.fft import fft, fftshift  # Or "numpy.fft" if you prefer
 
@@ -83,7 +83,7 @@ def start_conn():
     sdr_thread = threading.Thread(target=start_sdr, args=(frequency,))
     sdr_thread.start()
 
-    return render_template('temp.html')
+    return render_template('reception.html')
 
 
 @app.route('/stop_sdr', methods=['GET'])
@@ -94,6 +94,11 @@ def stop_sdr_endpoint():
         sdr_thread.join()
         sdr_thread = None
     return 'ok', 200
+
+
+@app.route('/render_reception', methods=['GET'])
+def reception():
+    return render_template('reception.html')
 
 
 @sock.route('/hi')
