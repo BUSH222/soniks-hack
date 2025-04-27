@@ -7,7 +7,6 @@ const waterfallCanvas = document.getElementById('waterfallCanvas');
 const waterfallCtx = waterfallCanvas.getContext('2d');
 
 const ws = new WebSocket("/hi");
-let minmaxset = false;
 
 ws.onopen = () => {
   console.log("WebSocket connected");

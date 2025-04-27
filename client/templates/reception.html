@@ -3,99 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart.js Example</title>
+    <title>Soniks custom WEBSDR iframe</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/reception.css">
-
 </head>
 <body>
     <div class="container">
         <!-- sidebar -->
-        <div class="sidebar">
-        <!-- panel 1 -->
-        <div class="panel" id="panel1">
-            <h3>Settings</h3>
-            <label for="mhzAmount">Frequency (MHz):</label>
-            <input type="number" id="mhzAmount" name="mhzAmount" placeholder="e.g. 100">
-            <button id="setMhzBtn">OK</button>
-            <label for="bandwidth">Bandwidth:</label>
-            <input type="number" id="bandwidth" value="1.024" readonly/>
-        </div>
-        <!-- panel 2 -->
-        <div class="panel" id="panel2">
-            <h3>Decoding Pipeline</h3>
-            <select id="pipelineSelect" name="pipeline">
-            {% for pipeline in pipelines %}
-                <option value="{{ pipeline.id }}">{{ pipeline.name }}</option>
-            {% endfor %}
-            </select>
-        </div>
-        <!-- panel 3 -->
-        <div class="panel" id="panel3">
-            <h3>Data:</h3>
-            <ul id="dataList" style="max-height: 200px; overflow-y: scroll;">
-            {% for item in data_items %}
-                <li>{{ item }}</li>
-            {% endfor %}
-            </ul>
-            <button id="saveDataBtn">Сохранить</button>
-        </div>
+        <div class="sidebar" id="sidebar">
+            <!-- panel 1 -->
+            <div class="panel" id="panel1" draggable="true">
+                <h3>Settings</h3>
+                <label for="mhzAmount">Frequency (MHz):</label>
+                <input id="mhzAmount" name="mhzAmount" placeholder="e.g. 100" value="100.1">
+                <button id="setFrequency">OK</button>
+                <label for="bandwidth">Bandwidth:</label>
+                <input type="number" id="bandwidth" value="1.024" readonly/>
+                <button id="stopSDR">Stop SDR</button>
+            </div>
+            <!-- panel 2 -->
+            <div class="panel" id="panel2" draggable="true">
+                <h3>Decoding Pipeline</h3>
+                <select id="pipelineSelect" name="pipeline">
+                    {% for pipeline in pipelines.items() %}
+                        <option value="{{ pipeline[0] }}">{{ pipeline[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- panel 3 -->
+            <div class="panel" id="panel3" draggable="true">
+                <h3>Data:</h3>
+                <ul id="dataList" style="max-height: 200px; overflow-y: scroll;">
+                </ul>
+                <button id="saveDataBtn">Сохранить как наблюдение</button>
+            </div>
         </div>
 
         <!-- content -->
         <div class="main">
-        <!-- waterfall -->
-        <div class="waterfall">
-            <canvas id="frequencyCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
-            <canvas id="waterfallCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
-        </div>
-        <!-- SNR graph and metrics -->
-        <div class="graph">
-            <canvas id="snrGraphCanvas"></canvas>
-            <div class="metrics">
-            <div>SNR: <span id="snrValue">-- dB</span></div>
-            <div>RSSI: <span id="rssiValue">-- dBm</span></div>
+            <!-- waterfall -->
+            <div class="waterfall">
+                <canvas id="frequencyCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
+                <canvas id="waterfallCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
             </div>
-        </div>
+            <!-- SNR graph and metrics -->
+            <div class="graph">
+                <canvas id="snrGraphCanvas"></canvas>
+                <div class="metrics">
+                    <div>SNR: <span id="snrValue">-- dB</span></div>
+                    <div>RSSI: <span id="rssiValue">-- dBm</span></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/reception.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-        const ctxWaterfall = document.getElementById('waterfallCanvas').getContext('2d');
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            let draggedElement = null;
 
-        const ctxSNR = document.getElementById('snrGraphCanvas').getContext('2d');
-        const snrChart = new Chart(ctxSNR, {
-            type: 'line',
-            data: {
-            labels: [],
-            datasets: [{
-                label: 'SNR (dB)',
-                data: [],
-                fill: false,
-                tension: 0.1
-            }]
-            },
-            options: {
-            scales: {
-                y: { title: { display: true, text: 'dB' } },
-                x: { title: { display: true, text: 'Time' } }
-            }
-            }
-        });
+            // Add dragstart and dragend event listeners to panels
+            sidebar.addEventListener('dragstart', (event) => {
+                draggedElement = event.target;
+                event.target.style.opacity = '0.5';
+            });
 
-        // Hook up (hawk tuah) button events
-        document.getElementById('setMhzBtn').addEventListener('click', () => {
-            const mhz = document.getElementById('mhzAmount').value;
-            console.log('Selected MHz:', mhz);
-        });
-        document.getElementById('saveDataBtn').addEventListener('click', () => {
-            console.log('Save data clicked');
-        });
+            sidebar.addEventListener('dragend', (event) => {
+                event.target.style.opacity = '';
+                draggedElement = null;
+            });
+
+            // Add dragover and drop event listeners to the sidebar
+            sidebar.addEventListener('dragover', (event) => {
+                event.preventDefault(); // Allow dropping
+                const afterElement = getDragAfterElement(sidebar, event.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    sidebar.appendChild(draggedElement);
+                } else {
+                    sidebar.insertBefore(draggedElement, afterElement);
+                }
+            });
+
+            sidebar.addEventListener('drop', (event) => {
+                event.preventDefault();
+            });
+
+            // Helper function to determine the element after which the dragged element should be inserted
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.panel:not(.dragging)')];
+
+                return draggableElements.reduce(
+                    (closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
+                        } else {
+                            return closest;
+                        }
+                    },
+                    { offset: Number.NEGATIVE_INFINITY }
+                ).element;
+            }
+
+            // Add event listener to the "Stop SDR" button
+            const stopSDRButton = document.getElementById('stopSDR');
+            stopSDRButton.addEventListener('click', () => {
+                fetch('/stop_sdr')
+                    .then(response => response.text())
+                    .then(data => {
+                        alert(`Response from server: ${data}`);
+                    })
+                    .catch(error => {
+                        alert(`Error: ${error}`);
+                    });
+            });
+
+            const setFrequencyButton = document.getElementById('setFrequency');
+            setFrequencyButton.addEventListener('click', () => {
+                const frequency = document.getElementById('mhzAmount').value;
+                fetch(`/change_freq?frequency=${encodeURIComponent(parseFloat(frequency)*1000000)}`)
+                    .then(response => response.text())
+                    .then(data => {
+                        alert(`Response from server: ${data}`);
+                    })
+                    .catch(error => {
+                        alert(`Error: ${error}`);
+                    });
+            });
         });
     </script>
-
-    </body>
+</body>
 </html>
