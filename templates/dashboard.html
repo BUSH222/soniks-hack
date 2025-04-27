@@ -75,8 +75,12 @@
             link.addEventListener('click', function (event) {
                 event.preventDefault();
 
+                const iframeSrc = this.getAttribute('data-iframe-src');
                 const href = this.getAttribute('href');
-                if (iframe && href) {
+
+                if (iframe && iframeSrc) {
+                    iframe.src = iframeSrc;
+                } else if (iframe && href) {
                     iframe.src = href;
                 }
 
