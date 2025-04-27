@@ -23,7 +23,11 @@
                             Архив и аналитика
                         </a>
                     </li>
-
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'planner' %}active{% endif %}" href="#" data-iframe-src="https://sonik.space/observations/">
+                            Планировщик
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" href="{{ url_for('settings', id=station_id) }}">
                             Настройки
@@ -61,5 +65,26 @@
 
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const iframe = document.querySelector('iframe');
+        const sidebarLinks = document.querySelectorAll('#sidebar .nav-link');
+
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                const href = this.getAttribute('href');
+                if (iframe && href) {
+                    iframe.src = href;
+                }
+
+                sidebarLinks.forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
 
 {% endblock %}
