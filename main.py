@@ -19,6 +19,7 @@ from dbmanager import (
     get_station_owner,
     register_sdr_bd,
     update_station_info,
+    check_api_key
     
 )
 import requests
@@ -165,14 +166,17 @@ def archive(id):
 @app.route("/stations/<id>/dashboard/settings", methods=["GET", "POST"])
 @login_required
 def settings(id):
+    
     if request.method == "GET":
         info = get_station_brief_info_by_id(id)
     if request.method == "POST":
-        mail = request.form["notify_mail"]
-        tg = request.form["notify_tg"]
-        time = request.form["early_time"]
+        info = request.json()
+        mail = info["notify_mail"]
+        tg = info["notify_tg"]
+        time = info["early_time"]
+        key = info["api_key"]
         update_station_info(
-            id, notify_mail=mail, notify_tg=tg, early_time=time)
+            id, notify_mail=mail, notify_tg=tg, early_time=time,api_key=key)
 
     return render_template("settings.html", info=info)
 
@@ -184,8 +188,9 @@ def settings(id):
 def register_sdr(id):
     if request.method == "GET":
         sdr = request.args.get('address')
+        key = request.args.get('key')
         print(sdr)
-        if sdr and confirm_ownership(current_user.id,id):
+        if sdr and check_api_key(key,id):
             register_sdr_bd(id,sdr)
             return {"Status":"Ok"}
         else:
@@ -197,18 +202,17 @@ def edit_station(id):
     if request.method == "GET":
         info = get_full_station_info_by_id(id)
     if request.method == "POST":
-        name = request.form["name"]
-        lat = request.form["lat"]
-        long = request.form["long"]
-        alt = request.form["alt"]
-        sdr_server_address = request.form["sdr_server_address"]
+        info = request.json()
+        name = info["name"]
+        lat = info["lat"]
+        long = info["long"]
+        alt = info["alt"]
         update_station_info(
             id,
             name=name,
             lat=lat,
             long=long,
             alt=alt,
-            sdr_server_address=sdr_server_address,
         )
         return redirect(url_for("satation", id=id))
 

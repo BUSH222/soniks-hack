@@ -10,16 +10,22 @@ def populate_base_data():
     Session = sessionmaker(bind=engine)
     db_session = Session()
     bob = User(name = "Bob",password = '123')
-    bob_station = Station(name='NIGGER',lat=55.7522,long=37.6156,alt=123)
-    db_session.add_all([bob,bob_station])
+    bob_station = Station(name='RAAAA',lat=55.7522,long=37.6156,alt=123)
+    nana = User(name = "Nana", password = '123123')
+    nana_station = Station(name='nanasss',lat=55.1123,long=32.6156,alt=11233)
+    db_session.add_all([bob,bob_station,nana,nana_station])
+    
     try:
         db_session.commit()
     except Exception as e:
         raise e
     user_id = db_session.query(User).first().id
-    station_id = db_session.query(Station).all()[0].id
+    station_id = db_session.query(Station).all()[len(station_id)-1].id
     bob_own = Ownership(user_id=user_id,station_id=station_id)
-    db_session.add_all([bob_own])
+    user_id = db_session.query(User).first().id
+    station_id = db_session.query(Station).all()[len(station_id)-1].id
+    nana_own = Ownership(user_id=user_id,station_id=station_id)
+    db_session.add_all([bob_own,nana_own])
     try:
         db_session.commit()
     except Exception as e:

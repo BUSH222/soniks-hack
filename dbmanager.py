@@ -19,6 +19,7 @@ class User(Base):
     name = Column(String)
     password = Column(String,unique=True)
     tg = Column(String)
+    api_key = Column(String)
     email = Column(String)
 
 
@@ -59,6 +60,16 @@ def update_station_info(station_id, **kwargs):
         db_session.rollback()
         raise e
 
+
+def check_api_key(key,station_id):
+    user_with_api = db_session.query(User).filter(User.api_key == key).first()
+    print(user_with_api.name)
+    if user_with_api:
+        owner = db_session.query(Ownership).filter(Ownership.station_id == station_id and Ownership.user_id == user_with_api.id)
+        print(f'ASDASD {owner.first().user_id}')
+        if owner.first().user_id ==user_with_api.id:
+            return True
+    return False
 
 def get_station_owner(station_id):
     owner_id = db_session.query(Ownership).filter(Ownership.station_id == station_id).first()
