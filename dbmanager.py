@@ -138,3 +138,10 @@ def get_all_user_data_by_id(id):
         return [data.id,data.name,data.password]
     else:
         return "No such user"
+
+def get_station_address_by_station_id(id):
+    data = db_session.query(Station).filter(Station.id == id).first()
+    if data:
+        return data.sdr_server_address
+    else:
+        return "None set"

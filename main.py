@@ -20,7 +20,8 @@ from dbmanager import (
     register_sdr_bd,
     update_station_info,
     check_api_key,
-    update_api_key
+    update_api_key,
+    get_station_address_by_station_id
     
 )
 import requests
@@ -28,7 +29,7 @@ import requests
 
 
 init_bd()
-populate_base_data()
+# populate_base_data()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -155,7 +156,8 @@ def map(id):
 @app.route("/stations/<id>/dashboard/reception", methods=["GET", "POST"])
 @login_required
 def reception(id):
-    return render_template("reception.html", id=id)
+    station_address = get_station_address_by_station_id(id)
+    return redirect(f'{station_address}/start_conn?frequency=103000000')
 
 
 @app.route("/stations/<id>/dashboard/archive", methods=["GET", "POST"])

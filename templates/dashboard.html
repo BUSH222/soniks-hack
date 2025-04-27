@@ -59,7 +59,7 @@
         <!-- iframe -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
             <div class="iframe-container" style="height: 85vh;">
-                <iframe src="{{ iframe_src }}" class="w-100 h-100 border rounded" frameborder="0" allowfullscreen></iframe>
+                <iframe src="{{ url_for('map', id=station_id) }}" class="w-100 h-100 border rounded" frameborder="0" allowfullscreen></iframe>
             </div>
         </main>
 
