@@ -87,9 +87,10 @@ def get_user_id_by_name(name):
     return None
 
 def confirm_ownership(user_id,station_id):
-    t = db_session.query(Ownership).filter(Ownership.station_id == station_id and Ownership.user_id == user_id).first()
-    if t.station_id != None:
-        return True
+    t = db_session.query(Ownership).filter(Ownership.station_id == station_id).all()
+    for i in t:
+        if i.user_id == user_id:
+            return True
     return False
 def get_full_station_info_by_id(id):
     info = db_session.query(Station).filter(Station.id == id).first()
