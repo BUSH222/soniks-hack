@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for,abort
 from flask_login import (
     login_user,
     LoginManager,
@@ -112,15 +112,17 @@ def station(id):
 @login_required
 def station_dashboard(id):
     user_id = current_user.id
-    info = []
-    stations_id = get_stations_by_user_id(user_id)
-    print(f"id:{user_id}")
-    print(f"stat:{stations_id}")
-    for id in stations_id:
-        ex = get_station_brief_info_by_id(id)
-        info.append(ex)
-    
-    name = get_station_brief_info_by_id(id)[1]
+    if confirm_ownership(current_user.id,id):
+        info = []
+        print(confirm_ownership(current_user.id,id))
+        stations_id = get_stations_by_user_id(user_id)
+        for id in stations_id:
+            ex = get_station_brief_info_by_id(id)
+            info.append(ex)
+
+        name = get_station_brief_info_by_id(id)[1]
+    else:
+        return abort(403)
     return render_template("dashboard.html", station_id=id,name=name,user_stations=info)
 
 
