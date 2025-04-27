@@ -1,77 +1,112 @@
-document.addEventListener('DOMContentLoaded', function() {
-    initCharts();
-    fetchLogs();
-    fetchChartData();
-    setInterval(fetchLogs, 20000);
-    setInterval(fetchChartData, 60000);
+// /static/archive.js
+
+let statusChart, freqChart, successPie;
+
+document.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+  fetchLogs();
+  fetchAllCharts();
+  setInterval(fetchLogs, 20000);
+  setInterval(fetchAllCharts, 60000);
 });
 
-// panel 2
+// ——— Live log (panel 2) ———
 function fetchLogs() {
-fetch('https://sonik.space/api/observations/')
-    .then(res => res.json())
-    .then(data => updateObsLog(data))
-    .catch(err => console.error('Log fetch error:', err));
+  fetch('https://sonik.space/api/observations/')
+    .then(r => r.json())
+    .then(updateObsLog)
+    .catch(e => console.error('Log fetch error:', e));
 }
 
 let lastTimestamp = null;
 function updateObsLog(observations) {
-    const log = document.getElementById('observationLog');
-    observations.forEach(obs => {
-        if (!lastTimestamp || new Date(obs.timestamp) > new Date(lastTimestamp)) {
-        const li = document.createElement('li');
-        li.className = 'list-group-item';
-        li.textContent = `[${new Date(obs.timestamp).toLocaleTimeString()}] ID:${obs.id} ${obs.status}`;
-        log.prepend(li);
-        lastTimestamp = obs.timestamp;
-        }
-    });
-while (log.children.length > 50) log.removeChild(log.lastChild);
+  const log = document.getElementById('observationLog');
+  observations.forEach(o => {
+    if (!lastTimestamp || new Date(o.timestamp) > new Date(lastTimestamp)) {
+      const li = document.createElement('li');
+      li.textContent = `[${new Date(o.timestamp).toLocaleTimeString()}] ID:${o.id} ${o.status}`;
+      log.prepend(li);
+      lastTimestamp = o.timestamp;
+    }
+  });
+  while (log.children.length > 50) log.removeChild(log.lastChild);
 }
 
-// panel 3
-let chart1, chart2, chart3;
-function fetchChartData() {
-fetch('https://sonik.space/api/observations/')
-    .then(res => res.json())
-    .then(data => {
-    const labels = data.map(o => new Date(o.timestamp).toLocaleTimeString()).slice(-20);
-    const snr = data.map(o => o.snr).slice(-20);
-    const rssi = data.map(o => o.rssi).slice(-20);
-
-    updateChart(chart1, labels, snr, 'SNR (dB)');
-    updateChart(chart2, labels, rssi, 'RSSI (dBm)');
-    updateChart(chart3, labels, data.map(o => o.success ? 1 : 0).slice(-20), 'Успех (1)/Неудача (0)');
-    })
-    .catch(err => console.error('Chart fetch error:', err));
-}
-
+// ——— Charts init ———
 function initCharts() {
-    const ctx1 = document.getElementById('snrChart').getContext('2d');
-    const ctx2 = document.getElementById('rssiChart').getContext('2d');
-    const ctx3 = document.getElementById('successChart').getContext('2d');
-    chart1 = new Chart(ctx1, makeConfig([], [], 'SNR (dB)'));
-    chart2 = new Chart(ctx2, makeConfig([], [], 'RSSI (dBm)'));
-    chart3 = new Chart(ctx3, makeConfig([], [], 'Статус'));  
-}    
+  // Chart #1: Status counts (bar)
+  const sCtx = document.getElementById('statusChart').getContext('2d');
+  statusChart = new Chart(sCtx, {
+    type: 'bar',
+    data: { labels: [], datasets: [{ label: 'Количество', data: [], backgroundColor: '#2998e5' }] },
+    options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'Число наблюдений' } } } }
+  });
 
-function makeConfig(labels, data, label) {
-return {
+  // Chart #2: Observations per minute (line)
+  const fCtx = document.getElementById('freqChart').getContext('2d');
+  freqChart = new Chart(fCtx, {
     type: 'line',
-    data: { labels, datasets: [{ label, data, fill: false, tension: 0.1 }] },
+    data: { labels: [], datasets: [{ label: 'Наблюдений/мин', data: [], fill: false, tension: 0.3, borderColor: '#fe5e22' }] },
     options: {
-    scales: {
-        y: { title: { display: true, text: label } },
-        x: { title: { display: true, text: 'Время' } }
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Число наблюдений' } },
+        x: { title: { display: true, text: 'Время (HH:MM)' } }
+      }
     }
-    }
-};
+  });
+
+  // Chart #3: Success vs Failure (pie)
+  const pCtx = document.getElementById('successPie').getContext('2d');
+  successPie = new Chart(pCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Успех', 'Неудача'],
+      datasets: [{ data: [0,0], backgroundColor: ['#2998e5','#fe5e22'] }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
 }
 
-function updateChart(chart, labels, data, label) {
-chart.data.labels = labels;
-chart.data.datasets[0].data = data;
-chart.update();
+// ——— Fetch & update all charts ———
+function fetchAllCharts() {
+  fetch('https://sonik.space/api/observations/')
+    .then(r => r.json())
+    .then(data => {
+      updateStatusChart(data);
+      updateFreqChart(data);
+      updateSuccessPie(data);
+    })
+    .catch(e => console.error('Chart fetch error:', e));
 }
 
-initCharts();
+// ——— Chart 1: tally by status ———
+function updateStatusChart(data) {
+  const counts = {};
+  data.forEach(o => counts[o.status] = (counts[o.status]||0) + 1);
+  const labels = Object.keys(counts);
+  statusChart.data.labels = labels;
+  statusChart.data.datasets[0].data = labels.map(l => counts[l]);
+  statusChart.update();
+}
+
+// ——— Chart 2: group by minute ———
+function updateFreqChart(data) {
+  const buckets = {};
+  data.forEach(o => {
+    const m = new Date(o.timestamp)
+                .toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    buckets[m] = (buckets[m]||0) + 1;
+  });
+  const labels = Object.keys(buckets).sort();
+  freqChart.data.labels = labels;
+  freqChart.data.datasets[0].data = labels.map(l => buckets[l]);
+  freqChart.update();
+}
+
+// ——— Chart 3: success vs failure ———
+function updateSuccessPie(data) {
+  const ok = data.filter(o => o.success).length;
+  const fail = data.length - ok;
+  successPie.data.datasets[0].data = [ok, fail];
+  successPie.update();
+}
