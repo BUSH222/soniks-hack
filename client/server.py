@@ -1,8 +1,7 @@
-from flask import Flask, jsonify, request, render_template
-from pipelines import pipelines
+from flask import Flask, request, render_template
+# from pipelines import pipelines
 from flask_sock import Sock
 import numpy as np
-import websockets
 import asyncio
 import osmosdr
 from gnuradio import gr, blocks
@@ -26,6 +25,7 @@ rssi = 0
 # Thread management
 sdr_thread = None
 sdr_thread_stop_event = threading.Event()
+
 
 class SDRToWebSocket(gr.top_block):
     def __init__(self, center_freq, samp_rate, bandwidth):
@@ -64,7 +64,6 @@ class WebSocketSink(gr.sync_block):
             retransmitted_data = data
         else:
             retransmitted_data += data
-
 
 
 @app.route('/start_conn', methods=['GET'])
