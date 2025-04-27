@@ -2,68 +2,22 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>WebSocket Demo</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/nicolaspanel/numjs@0.15.1/dist/numjs.min.js"></script>
-  <script src="/static/jsfft.bundle.js"></script>
+  <title>WebSocket Demo (Canvas)</title>
 </head>
-<script>
-  const fft = new jsfft.ComplexArray(512);
-  console.log(fft);
-</script>
 <body>
-  <h1>WebSocket Client</h1>
-  <canvas id="frequencyChart" width="800" height="400"></canvas>
+  <h1>WebSocket Client (Canvas Plot)</h1>
+  <!-- Manually sized canvas for drawing frequency (x) vs power (y) -->
+  <canvas id="frequencyCanvas" width="800" height="400" style="border:1px solid #ccc;"></canvas>
+
   <script>
     // Basic parameters
-    const SAMPLE_RATE = 2.048e6;
-    const N = 1024;
+    const SAMPLE_RATE = 1.024e6;
 
-    // Copy the global FFT constructor into a local variable
-    // (Confirm 'window.FFT' is how fft.js is exposed by your build)
-    const FFTConstructor = window.FFT; 
+    // Access the canvas and its 2D rendering context
+    const canvas = document.getElementById('frequencyCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // Chart initialization
-    const ctx = document.getElementById('frequencyChart').getContext('2d');
-    const frequencyChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Frequency vs Power (dB)',
-          data: [],
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderWidth: 1,
-          pointRadius: 0,
-        }]
-      },
-      options: {
-        responsive: false,
-        scales: {
-          x: {
-            type: 'linear',
-            title: {
-              display: true,
-              text: 'Frequency (Hz)',
-              min: -SAMPLE_RATE / 2,
-              max:  SAMPLE_RATE / 2
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Power (dB)'
-            }
-          }
-        },
-        plugins: {
-          legend: { display: true, position: 'top' }
-        }
-      }
-    });
-
-    // WebSocket connection
+    // Open the WebSocket
     const ws = new WebSocket("ws://localhost:8000/hi");
 
     ws.onopen = () => {
@@ -71,84 +25,50 @@
     };
 
     ws.onmessage = (event) => {
-      event.data.arrayBuffer().then((buffer) => {
-        // Convert raw binary data (I/Q) to Int8
-        const decodedData = new Int8Array(buffer);
+      // Parse incoming data as an ArrayBuffer of float32 samples
+      event.data.arrayBuffer().then(buffer => {
+        const floatData = new Float32Array(buffer);
+        const n = floatData.length;
 
-        // Interleave I and Q into iqArray
-        const iqArray = nj.zeros([decodedData.length / 2, 2]);
-        for (let i = 0, j = 0; i < decodedData.length; i += 2, j++) {
-          iqArray.set(j, 0, decodedData[i]);
-          iqArray.set(j, 1, decodedData[i + 1]);
+        // Build frequency axis so 0 Hz is centered
+        const freqAxis = new Array(n);
+        for (let i = 0; i < n; i++) {
+          freqAxis[i] = ((i - n / 2) * SAMPLE_RATE) / n;
         }
 
-        // Keep first N samples for FFT
-        const sliceLength = Math.min(N, iqArray.shape[0]);
-        const truncatedIQ = iqArray.slice([0, sliceLength], [0, 2]);
+        // Find min/max for frequency and dB range
+        let freqMin = freqAxis[0];
+        let freqMax = freqAxis[0];
+        let dbMin = floatData[0];
+        let dbMax = floatData[0];
 
-        // Apply Hann window
-        applyWindow(truncatedIQ, sliceLength);
-
-        // Set up fft.js arrays
-        const f = new FFTConstructor(sliceLength);
-        const inputComplex = f.createComplexArray();
-        const outputComplex = f.createComplexArray();
-
-        // Fill inputComplex with real=I, imag=Q
-        for (let k = 0, cIndex = 0; k < sliceLength; k++) {
-          inputComplex[cIndex++] = truncatedIQ.get(k, 0); // I
-          inputComplex[cIndex++] = truncatedIQ.get(k, 1); // Q
+        for (let i = 1; i < n; i++) {
+          if (freqAxis[i] < freqMin) freqMin = freqAxis[i];
+          if (freqAxis[i] > freqMax) freqMax = freqAxis[i];
+          if (floatData[i] < dbMin) dbMin = floatData[i];
+          if (floatData[i] > dbMax) dbMax = floatData[i];
         }
 
-        // Perform FFT
-        f.transform(outputComplex, inputComplex);
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Convert to power (dB) and shift 0 Hz to center
-        const { freqs, powerdB } = computePowerSpectrum(outputComplex, SAMPLE_RATE);
+        // Draw dots
+        ctx.fillStyle = '#0080ff';
+        for (let i = 0; i < n; i++) {
+          // Map freqAxis[i] from [freqMin, freqMax] to [0, canvas.width]
+          const x = (freqAxis[i] - freqMin) / (freqMax - freqMin) * canvas.width;
+          // Invert y so higher dB is higher on the canvas
+          const y = canvas.height - (floatData[i] - dbMin) / (dbMax - dbMin) * canvas.height;
 
-        // Update the chart
-        frequencyChart.data.labels = freqs;
-        frequencyChart.data.datasets[0].data = powerdB;
-        frequencyChart.update();
+          // Draw a small 1x1 rect (or a small circle) to represent the dot
+          ctx.fillRect(x, y, 1, 1);
+        }
       });
     };
 
     ws.onclose = () => {
-      console.log("WebSocket closed");
+      console.log("WebSocket disconnected");
     };
-
-    // Hann window
-    function applyWindow(iqArray, length) {
-      for (let n = 0; n < length; n++) {
-        const winVal = 0.5 * (1 - Math.cos((2 * Math.PI * n) / (length - 1)));
-        iqArray.set(n, 0, iqArray.get(n, 0) * winVal);
-        iqArray.set(n, 1, iqArray.get(n, 1) * winVal);
-      }
-    }
-
-    // Convert complex FFT output to frequency vs power arrays
-    function computePowerSpectrum(outputComplex, sampleRate) {
-      const n = outputComplex.length >> 1;
-      const half = n >> 1;
-
-      const magnitude = new Float32Array(n);
-      for (let i = 0, idx = 0; i < n; i++) {
-        const re = outputComplex[idx++];
-        const im = outputComplex[idx++];
-        magnitude[i] = 20 * Math.log10(Math.sqrt(re * re + im * im) || 1e-9);
-      }
-
-      // Shift 0 Hz to center
-      const freqs = [];
-      const powerdB = [];
-      for (let i = 0; i < n; i++) {
-        const idxShifted = (i + half) % n;
-        freqs[i]  = ((i - half) * sampleRate) / n;
-        powerdB[i] = magnitude[idxShifted];
-      }
-
-      return { freqs, powerdB };
-    }
   </script>
 </body>
 </html>

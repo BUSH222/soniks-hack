@@ -1,28 +1,21 @@
-from flask import Flask, request, render_template
-# from pipelines import pipelines
-from flask_sock import Sock
-import numpy as np
 import asyncio
-import osmosdr
-from gnuradio import gr, blocks
+import numpy as np
 import time
 import threading
-
+from flask import Flask, request, render_template
+from flask_sock import Sock
+from gnuradio import gr, blocks
+import osmosdr
+# from scipy.fft import fft, fftshift  # Or "numpy.fft" if you prefer
 
 app = Flask(__name__)
 sock = Sock(app)
 
 frequency = None
-last_keep_alive = None
-BANDWIDTH = 1.024e6
-SAMPLE_RATE = 2.048e6
+BANDWIDTH = 1.024e6//2
+SAMPLE_RATE = 1.024e6
 
 retransmitted_data = None
-
-snr = 0
-rssi = 0
-
-# Thread management
 sdr_thread = None
 sdr_thread_stop_event = threading.Event()
 
@@ -35,13 +28,15 @@ class SDRToWebSocket(gr.top_block):
         self.sdr_source.set_center_freq(center_freq)
         self.sdr_source.set_bandwidth(bandwidth)
         self.sdr_source.set_gain(30)
-        self.complex_to_mag = blocks.complex_to_mag(1)
 
-        self.to_char = blocks.float_to_char(1, 127)
+        # We now remove complex_to_mag and float_to_char to preserve the raw complex data
+        # and feed it directly to our sink:
         self.sink = WebSocketSink()
 
-        # Chain: SDR -> complex_to_mag -> float_to_char -> WebSocket sink
-        self.connect(self.sdr_source, self.complex_to_mag, self.to_char, self.sink)
+        # Use np.complex64 as the input signature
+        # (Many SDR sources produce complex64 samples by default)
+        # The direct connection will output raw I/Q to WebSocketSink
+        self.connect(self.sdr_source, self.sink)
 
 
 class WebSocketSink(gr.sync_block):
@@ -49,32 +44,41 @@ class WebSocketSink(gr.sync_block):
         gr.sync_block.__init__(
             self,
             name="WebSocketSink",
-            in_sig=[np.int8],
+            in_sig=[np.complex64],  # Accept raw I/Q complex data
             out_sig=None
         )
 
     def work(self, input_items, output_items):
-        data = input_items[0].tobytes()
-        asyncio.run(self.send_data(data))
-        return len(input_items[0])
+        # input_items[0] is a numpy array of complex64
+        iq_data = input_items[0]
+        # For demonstration, compute an FFT for the entire block
+        # (In practice, chunk appropriately or buffer across calls)
+        # Example using numpy.fft:
+        fft_result = np.fft.fftshift(np.fft.fft(iq_data))
+        magnitude = 20 * np.log10(np.abs(fft_result) + 1e-9)
+
+        # Convert to float32 bytes or pick another format (e.g. JSON)
+        # The client can parse Float32Array on the frontend
+        payload = magnitude.astype(np.float32).tobytes()
+
+        # Store the payload for the WebSocket route to send
+        asyncio.run(self.send_data(payload))
+        return len(iq_data)
 
     async def send_data(self, data):
         global retransmitted_data
-        if retransmitted_data is None:
-            retransmitted_data = data
-        else:
-            retransmitted_data += data
+        # Overwrite or append depending on your preference
+        retransmitted_data = data
 
 
 @app.route('/start_conn', methods=['GET'])
 def start_conn():
     global sdr_thread, sdr_thread_stop_event
-    frequency = request.args.get('frequency')
-    assert frequency is not None, "Frequency parameter is required"
-    assert frequency.isdigit(), "Frequency must be a number"
-    frequency = int(frequency)
+    frequency_param = request.args.get('frequency')
+    assert frequency_param is not None, "Frequency parameter is required"
+    assert frequency_param.isdigit(), "Frequency must be a number"
+    frequency = int(frequency_param)
 
-    # Reset the stop event and start the SDR thread
     sdr_thread_stop_event.clear()
     sdr_thread = threading.Thread(target=start_sdr, args=(frequency,))
     sdr_thread.start()
@@ -82,21 +86,12 @@ def start_conn():
     return render_template('temp.html')
 
 
-@app.route('/change_freq', methods=['GET'])
-def change_freq():
-    frequency = request.args.get('frequency')
-    assert frequency is not None, "Frequency parameter is required"
-    assert frequency.isdigit(), "Frequency must be a number"
-    frequency = int(frequency)
-    return 'ok', 200
-
-
 @app.route('/stop_sdr', methods=['GET'])
 def stop_sdr_endpoint():
     global sdr_thread, sdr_thread_stop_event
     if sdr_thread is not None:
-        sdr_thread_stop_event.set()  # Signal the thread to stop
-        sdr_thread.join()  # Wait for the thread to terminate
+        sdr_thread_stop_event.set()
+        sdr_thread.join()
         sdr_thread = None
     return 'ok', 200
 
@@ -115,9 +110,9 @@ def start_sdr(frequency):
     global sdr_thread_stop_event
     tb = SDRToWebSocket(frequency, SAMPLE_RATE, BANDWIDTH)
     tb.start()
-    print("Sending raw data to an internal variable")
+    print("Sending FFT data to an internal buffer (retransmitted_data)")
     try:
-        while not sdr_thread_stop_event.is_set():  # Check if the stop event is set
+        while not sdr_thread_stop_event.is_set():
             time.sleep(1)
     except KeyboardInterrupt:
         print("Stopping...")
