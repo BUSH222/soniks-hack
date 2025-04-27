@@ -16,7 +16,7 @@ def populate_base_data():
         db_session.commit()
     except Exception as e:
         raise e
-    user_id = db_session.query(User).first().id
+    user_id = db_session.query(User).all().[0].id
     station_id = db_session.query(Station).first().id
     bob_own = Ownership(user_id=user_id,station_id=station_id)
     db_session.add_all([bob_own])
