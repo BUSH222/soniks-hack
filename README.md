@@ -1,1 +1,3 @@
 # Client-side station component, should work seamlessly with the existing sonik client if configured correctly
+
+The client folder is responsible for client-side web apps. It uses gnuradio and osmocom to extract sdr data, and then processes and sends it using websockets to our client. The client connects to the flask server, initiates a websocket connection and receives SDR IQ data which has been processed by a fourier transform. Then, he renders it on a waterfall and on the frequency chart. The user can currently only stop the SDR and change its center frequency, but more features can be easily added in the future.
