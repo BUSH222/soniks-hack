@@ -21,7 +21,8 @@ from dbmanager import (
     update_station_info,
     check_api_key,
     update_api_key,
-    get_station_address_by_station_id
+    get_station_address_by_station_id,
+    get_station_notif,
 )
 import requests
 from beyond.io.tle import Tle
@@ -39,18 +40,20 @@ init_bd()
 # populate_base_data()
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = "your_secret_key"
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):
     user_data = get_all_user_data_by_id(user_id)
     print(user_data)
     if user_data:
-        return User(user_data[0],user_data[1],user_data[2])
+        return User(user_data[0], user_data[1], user_data[2])
     return None
+
 
 class User(UserMixin):
     def __init__(self, id, username, password):
@@ -63,15 +66,15 @@ class User(UserMixin):
 def login():
     if request.method == "POST":
         data = request.form
-        username = data.get('username')
-        password = data.get('password')
+        username = data.get("username")
+        password = data.get("password")
         user_data = get_all_user_data_by_name(username)
         print(user_data)
         if user_data:
             if user_data[2] == password and len(password) < 32:
-                user = User(user_data[0],user_data[1],user_data[2])
+                user = User(user_data[0], user_data[1], user_data[2])
                 login_user(user)
-                return 'OK'
+                return "OK"
             else:
                 return "Invalid username or password"
     return render_template("login.html")
@@ -108,6 +111,7 @@ def user_stations(name):
 
     return render_template("users.html", stations=info)
 
+
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
 def station(id):
@@ -116,16 +120,18 @@ def station(id):
     if request.method == "GET":
         owner = get_station_owner(id)
         info = get_full_station_info_by_id(id)
-    return render_template("stations.html", owner=owner, info=info, change_button=change_button)
+    return render_template(
+        "stations.html", owner=owner, info=info, change_button=change_button
+    )
 
 
 @app.route("/stations/<id>/dashboard", methods=["GET", "POST"])
 @login_required
 def station_dashboard(id):
     user_id = current_user.id
-    if confirm_ownership(current_user.id,id):
+    if confirm_ownership(current_user.id, id):
         info = []
-        print(confirm_ownership(current_user.id,id))
+        print(confirm_ownership(current_user.id, id))
         stations_id = get_stations_by_user_id(user_id)
         for id in stations_id:
             ex = get_station_brief_info_by_id(id)
@@ -134,7 +140,9 @@ def station_dashboard(id):
         name = get_station_brief_info_by_id(id)[1]
     else:
         return abort(403)
-    return render_template("dashboard.html", station_id=id,name=name,user_stations=info)
+    return render_template(
+        "dashboard.html", station_id=id, name=name, user_stations=info
+    )
 
 
 @app.route("/stations/<id>/dashboard/map", methods=["GET", "POST"])
@@ -151,19 +159,19 @@ def map(id):
         res = dict()
         res["lat"] = stat_inf[4]
         res["long"] = stat_inf[3]
-        res["alt"] = int(''.join(filter(str.isdigit, stat_inf[2].split()[1])))
+        res["alt"] = int("".join(filter(str.isdigit, stat_inf[2].split()[1])))
         for i in station_planned_tles.json():
             added = False
             for tle in tles:
-                if tle.split('\n')[0] == i["tle0"]:
+                if tle.split("\n")[0] == i["tle0"]:
                     added = True
                     break
             if not added:
-                tles.append('\n'.join([i["tle0"], i["tle1"], i["tle2"]]))
-        
+                tles.append("\n".join([i["tle0"], i["tle1"], i["tle2"]]))
+
         tles = list(set(tles))[0:5]
         # Calculate the radius of the circle
-        h1 = res['alt']
+        h1 = res["alt"]
         radius = np.sqrt(12756 * h1 + h1**2) + 2294
 
         # Generate the circle around the station
@@ -174,15 +182,12 @@ def map(id):
         circle = Circle(
             (station_lat, station_long),
             radius / 150,  # Convert radius to degrees (approximation)
-            color='yellow',
+            color="yellow",
             alpha=0.3,
-            label="Coverage Area"
+            label="Coverage Area",
         )
         circle2 = Circle(
-            (station_lat, station_long),
-            1,
-            color='blue',
-            label="Station location"
+            (station_lat, station_long), 1, color="blue", label="Station location"
         )
         fig = Figure(figsize=(15.2, 8.2))
         ax = fig.subplots()
@@ -198,14 +203,23 @@ def map(id):
             longitudes, latitudes, current_position = get_satellite_tracks_from_tle(tle)
 
             # Generate the plot using Figure (without pyplot)
-            color = np.random.rand(3,)
+            color = np.random.rand(
+                3,
+            )
             lon, lat = current_position
             for lons, lats in zip(longitudes, latitudes):
                 ax.plot(lons, lats, color)
-            ax.scatter([lon], [lat], color=color, label=tle.split('\n')[0], s=50, edgecolors='black')
+            ax.scatter(
+                [lon],
+                [lat],
+                color=color,
+                label=tle.split("\n")[0],
+                s=50,
+                edgecolors="black",
+            )
         ax.set_xlim([-180, 180])
         ax.set_ylim([-90, 90])
-        ax.grid(True, color='w', linestyle=":", alpha=0.4)
+        ax.grid(True, color="w", linestyle=":", alpha=0.4)
         ax.set_xticks(range(-180, 181, 30))
         ax.set_yticks(range(-90, 91, 30))
         ax.legend()
@@ -225,14 +239,11 @@ def map(id):
         return jsonify({"error": "No TLE data available"}), 400
 
 
-
-
-
 @app.route("/stations/<id>/dashboard/reception", methods=["GET", "POST"])
 @login_required
 def reception(id):
     station_address = get_station_address_by_station_id(id)
-    return redirect(f'{station_address}/start_conn?frequency=103000000')
+    return redirect(f"{station_address}/start_conn?frequency=103000000")
 
 
 @app.route("/stations/<id>/dashboard/archive", methods=["GET", "POST"])
@@ -244,36 +255,43 @@ def archive(id):
 @app.route("/stations/<id>/dashboard/settings", methods=["GET", "POST"])
 @login_required
 def settings(id):
+    n_status = [None, None]
     if request.method == "GET":
         info = get_station_brief_info_by_id(id)
+        n_status = get_station_notif(id)
+
     if request.method == "POST":
         info = request.json
         mail = info["notify_mail"]
         tg = info["notify_tg"]
         time = info["early_time"]
         key = info["api_key"]
-        update_station_info(
-            id, notify_mail=mail, notify_tg=tg, early_time=time)
-        if key != '':
+        update_station_info(id, notify_mail=mail, notify_tg=tg, early_time=time)
+        if key != "":
             update_api_key(current_user.id, key)
-
-    return render_template("settings.html", info=info)
-
-
+    if n_status[0] == None:
+        n_status[0] = False
+    if n_status[1] == None:
+        n_status[1] = False
+    print(n_status)
+    return render_template(
+        "settings.html", info=info, notify_mail=n_status[0], notify_tg=n_status[1]
+    )
 
 
 @app.route("/stations/<id>/register_sdr", methods=["GET", "POST"])
 @login_required
 def register_sdr(id):
     if request.method == "GET":
-        sdr = request.args.get('address')
-        key = request.args.get('key')
+        sdr = request.args.get("address")
+        key = request.args.get("key")
         print(sdr)
-        if sdr and check_api_key(key,id):
-            register_sdr_bd(id,sdr)
-            return {"Status":"Ok"}
+        if sdr and check_api_key(key, id):
+            register_sdr_bd(id, sdr)
+            return {"Status": "Ok"}
         else:
-            return {"Status":"Fail"}
+            return {"Status": "Fail"}
+
 
 @app.route("/stations/edit/<id>", methods=["GET", "POST"])
 @login_required
@@ -297,5 +315,6 @@ def edit_station(id):
 
     return render_template("stations_editor.html", info=info)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
