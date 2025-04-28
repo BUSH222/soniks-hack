@@ -334,6 +334,7 @@ def settings(id):
     )
 
 
+
 @app.route("/stations/<id>/register_sdr", methods=["GET", "POST"])
 @login_required
 def register_sdr(id):
