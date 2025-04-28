@@ -17,7 +17,7 @@ class User(Base):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    password = Column(String,unique=True)
+    password = Column(String, unique=True)
     tg = Column(String)
     api_key = Column(String)
     email = Column(String)
@@ -59,32 +59,41 @@ def update_station_info(station_id, **kwargs):
     except Exception as e:
         db_session.rollback()
         raise e
-def update_api_key(user_id,api_key):
+
+
+def update_api_key(user_id, api_key):
     user = db_session.query(User).filter(User.id == user_id).first()
     user.api_key = api_key
-    print(user.id,api_key)
+    print(user.id, api_key)
     try:
         db_session.commit()
     except Exception as e:
         db_session.rollback()
         raise e
 
-def check_api_key(key,station_id):
+
+def check_api_key(key, station_id):
     user_with_api = db_session.query(User).filter(User.api_key == key).first()
     print(user_with_api.name)
     if user_with_api:
-        owner = db_session.query(Ownership).filter(Ownership.station_id == station_id and Ownership.user_id == user_with_api.id)
-        print(f'ASDASD {owner.first().user_id}')
-        if owner.first().user_id ==user_with_api.id:
+        owner = db_session.query(Ownership).filter(
+            Ownership.station_id == station_id and Ownership.user_id == user_with_api.id
+        )
+        print(f"ASDASD {owner.first().user_id}")
+        if owner.first().user_id == user_with_api.id:
             return True
     return False
 
+
 def get_station_owner(station_id):
-    owner_id = db_session.query(Ownership).filter(Ownership.station_id == station_id).first()
+    owner_id = (
+        db_session.query(Ownership).filter(Ownership.station_id == station_id).first()
+    )
     owner_name = db_session.query(User).filter(User.id == owner_id.user_id).first()
     return owner_name.name
 
-def register_sdr_bd(sid,sdr):
+
+def register_sdr_bd(sid, sdr):
     station = db_session.query(Station).filter(Station.id == sid).first()
     if station:
         station.sdr_server_address = sdr
@@ -94,10 +103,17 @@ def register_sdr_bd(sid,sdr):
         db_session.rollback()
         raise e
 
+
 def get_station_brief_info_by_id(station_id):
     station = db_session.query(Station).filter(Station.id == station_id).first()
     location = generate_coordinate_id(station.lat, station.long)
-    info = [station.id,station.name, location]
+    info = [station.id, station.name, location]
+    return info
+
+
+def get_station_notif(station_id):
+    station = db_session.query(Station).filter(Station.id == station_id).first()
+    info = [station.notify_mail, station.notify_tg]
     return info
 
 
@@ -108,36 +124,43 @@ def get_stations_by_user_id(user_id):
         res.append(station.station_id)
     return res
 
+
 def get_user_id_by_name(name):
     user = db_session.query(User).filter(User.name == name).first()
     if user:
         return user.id
     return None
 
-def confirm_ownership(user_id,station_id):
+
+def confirm_ownership(user_id, station_id):
     t = db_session.query(Ownership).filter(Ownership.station_id == station_id).all()
     for i in t:
         if i.user_id == user_id:
             return True
     return False
+
+
 def get_full_station_info_by_id(id):
     info = db_session.query(Station).filter(Station.id == id).first()
     location = generate_coordinate_id(info.lat, info.long)
-    return [info.id,info.name,location,info.lat,info.long,info.alt]
+    return [info.id, info.name, location, info.lat, info.long, info.alt]
+
 
 def get_all_user_data_by_name(name):
     data = db_session.query(User).filter(User.name == name).first()
     if data:
-        return [data.id,data.name,data.password]
+        return [data.id, data.name, data.password]
     else:
         return "No such user"
+
 
 def get_all_user_data_by_id(id):
     data = db_session.query(User).filter(User.id == id).first()
     if data:
-        return [data.id,data.name,data.password]
+        return [data.id, data.name, data.password]
     else:
         return "No such user"
+
 
 def get_station_address_by_station_id(id):
     data = db_session.query(Station).filter(Station.id == id).first()
