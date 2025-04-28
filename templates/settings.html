@@ -15,7 +15,7 @@
         <div class="setting-item">
             <span>Электронная почта</span>
             <label class="switch">
-                <input type="checkbox" id="emailSwitch">
+                <input type="checkbox" id="emailSwitch" {% if notify_mail %}checked{% endif %}>
                 <span class="slider"></span>
             </label>
         </div>
@@ -23,7 +23,7 @@
         <div class="setting-item">
             <span>Telegram</span>
             <label class="switch">
-                <input type="checkbox" id="telegramSwitch">
+                <input type="checkbox" id="telegramSwitch" {% if notify_tg %}checked{% endif %}>
                 <span class="slider"></span>
             </label>
         </div>
