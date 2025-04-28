@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки</title>
+    <link rel="stylesheet" href="/static/frames.css">
+</head>
+<body>
+    <div class="settings-page">
+        <h1>НАСТРОЙКИ</h1>
+        
+        <h3>Уведомления:</h3>
+        
+        <div class="setting-item">
+            <span>Электронная почта</span>
+            <label class="switch">
+                <input type="checkbox" id="emailSwitch" {% if notify_mail %}checked{% endif %}>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="setting-item">
+            <span>Telegram</span>
+            <label class="switch">
+                <input type="checkbox" id="telegramSwitch" {% if notify_tg %}checked{% endif %}>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="setting-text">
+            Уведомить за 
+            <input type="number" id="notifyMinutes" value="5" min="1" class="small-input"> 
+            минут до начала пролета
+        </div>
+
+        <h3>API ключ:</h3>
+        <div class="api-key">
+            <input type="text" id="apiKeyInput" value="{{ api_key }}" class="api-input">
+        </div>
+        
+        <h3>Подключить соц. сети:</h3>
+        
+        <div class="social-icons">
+            <a href="#" class="social-link">
+                <img src="/static/img/email_icon.png" alt="Email" />
+            </a>
+            <a href="#" class="social-link">
+                <img src="/static/img/telegram_icon.png" alt="Telegram" />
+            </a>
+        </div>
+        
+        <button class="save-button" id="saveSettings">Сохранить</button>
+    </div>
+    <script src="/static/settings.js"></script>
+</body>
+</html>

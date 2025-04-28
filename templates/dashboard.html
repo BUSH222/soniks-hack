@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Дэшборд{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- dashboard sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse vh-100 d-flex flex-column justify-content-between p-0 shadow-sm">
+            <div>
+                <ul class="nav flex-column pt-3">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'map' %}active{% endif %}" href="{{ url_for('map_thing', id=station_id) }}">
+                            Карта
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'reception' %}active{% endif %}" href="{{ url_for('reception', id=station_id) }}">
+                            Прием сигналов
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'archive' %}active{% endif %}" href="{{ url_for('archive', id=station_id) }}">
+                            Архив и аналитика
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'planner' %}active{% endif %}" href="#" data-iframe-src="https://sonik.space/observations/">
+                            Планировщик
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" href="{{ url_for('settings', id=station_id) }}">
+                            Настройки
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- stations dropdown -->
+            <div class="border-top p-3">
+                <div class="dropdown">
+                    <button class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center" type="button" id="stationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ id }} | {{ name }}
+                        <i class="bi bi-caret-down-fill"></i>
+                    </button>
+                    <ul class="dropdown-menu w-100" aria-labelledby="stationDropdown">
+                        {% for user_station in user_stations %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('station_dashboard', id=user_station[0]) }}">
+                                {{ user_station[0] }} | {{ user_station[1] }}
+                            </a> 
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- iframe -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="iframe-container" style="height: 85vh;">
+                <iframe src="{{ url_for('map_thing', id=station_id) }}" class="w-100 h-100 border rounded" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </main>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const iframe = document.querySelector('iframe');
+        const sidebarLinks = document.querySelectorAll('#sidebar .nav-link');
+
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                const iframeSrc = this.getAttribute('data-iframe-src');
+                const href = this.getAttribute('href');
+
+                if (iframe && iframeSrc) {
+                    iframe.src = iframeSrc;
+                } else if (iframe && href) {
+                    iframe.src = href;
+                }
+
+                sidebarLinks.forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
+
+{% endblock %}

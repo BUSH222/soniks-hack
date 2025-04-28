@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архив</title>
+    <link rel="stylesheet" href="/static/frames.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="archive-container">
+        <!-- left side -->
+        <div class="left-panel">
+            <!-- panel 1 -->
+            <div class="panel">
+                <h2 class="panel-title">История сеансов</h2>
+                <p class="panel-text">Процент успешности: <strong class="highlight">{{ success_rate }}%</strong></p>
+            </div>
+
+            <!-- panel 2 -->
+            <div class="panel">
+                <h2 class="panel-title">Лог наблюдений</h2>
+                <ul id="observationLog"></ul>
+            </div>
+        </div>
+
+        <!-- right side -->
+        <div class="right-panel">
+            <div class="panel">
+                <h2 class="panel-title">Статусы наблюдений</h2>
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="panel">
+                <h2 class="panel-title">Частота наблюдений (по минутам)</h2>
+                <canvas id="freqChart"></canvas>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Успех vs Неудача</h2>
+                <canvas id="successPie"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/archive.js"></script>
+</body>
+</html>
