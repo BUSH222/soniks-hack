@@ -353,7 +353,8 @@ canvas {
 }
 
 canvas {
-  width: 100% !important;
-  height: 140px !important;
+  width: auto;
+  max-width: 100%;
+  height: auto;
   display: block;
 }

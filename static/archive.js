@@ -1,5 +1,3 @@
-// /static/archive.js
-
 let statusChart, freqChart, successPie;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(fetchAllCharts, 60000);
 });
 
-// ——— Live log (panel 2) ———
 function fetchLogs() {
   fetch('https://sonik.space/api/observations/')
     .then(r => r.json())
@@ -32,9 +29,8 @@ function updateObsLog(observations) {
   while (log.children.length > 50) log.removeChild(log.lastChild);
 }
 
-// ——— Charts init ———
 function initCharts() {
-  // Chart #1: Status counts (bar)
+  // status counts (bar)
   const sCtx = document.getElementById('statusChart').getContext('2d');
   statusChart = new Chart(sCtx, {
     type: 'bar',
@@ -42,7 +38,7 @@ function initCharts() {
     options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'Число наблюдений' } } } }
   });
 
-  // Chart #2: Observations per minute (line)
+  // observations per minute (line)
   const fCtx = document.getElementById('freqChart').getContext('2d');
   freqChart = new Chart(fCtx, {
     type: 'line',
@@ -55,7 +51,7 @@ function initCharts() {
     }
   });
 
-  // Chart #3: Success vs Failure (pie)
+  // success vs failure (pie)
   const pCtx = document.getElementById('successPie').getContext('2d');
   successPie = new Chart(pCtx, {
     type: 'pie',
@@ -67,7 +63,6 @@ function initCharts() {
   });
 }
 
-// ——— Fetch & update all charts ———
 function fetchAllCharts() {
   fetch('https://sonik.space/api/observations/')
     .then(r => r.json())
@@ -79,7 +74,6 @@ function fetchAllCharts() {
     .catch(e => console.error('Chart fetch error:', e));
 }
 
-// ——— Chart 1: tally by status ———
 function updateStatusChart(data) {
   const counts = {};
   data.forEach(o => counts[o.status] = (counts[o.status]||0) + 1);
@@ -89,7 +83,6 @@ function updateStatusChart(data) {
   statusChart.update();
 }
 
-// ——— Chart 2: group by minute ———
 function updateFreqChart(data) {
   const buckets = {};
   data.forEach(o => {
@@ -103,7 +96,6 @@ function updateFreqChart(data) {
   freqChart.update();
 }
 
-// ——— Chart 3: success vs failure ———
 function updateSuccessPie(data) {
   const ok = data.filter(o => o.success).length;
   const fail = data.length - ok;
