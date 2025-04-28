@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
-import os
 import re
-import csv
-import mimetypes
-from optparse import OptionParser
 import smtplib
 from email.message import EmailMessage
 
-email_re = r"\A[a-zA-Z0-9!#$%&'*+/=?^_‘{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_‘{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\Z"
-def send(host,port,user,password,subject,from_name,to_addr, msg,from_addr):
+email_re = r'''\A[a-zA-Z0-9!#$%&'*+/=?^_‘{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_‘{|}~-]+)*@(?:[a-zA-Z0-9]
+(?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\Z'''
+
+
+def send(host, port, user, password, subject, from_name, to_addr, msg, from_addr):
     srv = smtplib.SMTP(host, port)
     srv.ehlo()
     srv.starttls()
@@ -25,7 +24,6 @@ def send(host,port,user,password,subject,from_name,to_addr, msg,from_addr):
         try:
             srv.send_message(em)
         except Exception as e:
-            
-            print(f"Error: {to_addr}")
+            print(f"Error: {to_addr}, {e}")
         else:
             print(f"Sent: {to_addr}")
