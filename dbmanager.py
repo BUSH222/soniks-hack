@@ -43,7 +43,7 @@ class Ownership(Base):
     station_id = Column(Integer, ForeignKey("station.id"))
 
 
-engine = create_engine("postgresql://postgres:postgres@localhost/soniks")
+engine = create_engine("postgresql://postgres:12345678@localhost/soniks")
 Session = sessionmaker(bind=engine)
 db_session = Session()
 
