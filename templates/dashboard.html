@@ -9,7 +9,7 @@
             <div>
                 <ul class="nav flex-column pt-3">
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'map' %}active{% endif %}" href="{{ url_for('map', id=station_id) }}">
+                        <a class="nav-link {% if active_tab == 'map' %}active{% endif %}" href="{{ url_for('map_thing', id=station_id) }}">
                             Карта
                         </a>
                     </li>
@@ -59,7 +59,7 @@
         <!-- iframe -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
             <div class="iframe-container" style="height: 85vh;">
-                <iframe src="{{ url_for('map', id=station_id) }}" class="w-100 h-100 border rounded" frameborder="0" allowfullscreen></iframe>
+                <iframe src="{{ url_for('map_thing', id=station_id) }}" class="w-100 h-100 border rounded" frameborder="0" allowfullscreen></iframe>
             </div>
         </main>
 

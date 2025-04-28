@@ -27,6 +27,8 @@ from dbmanager import (
 import requests
 from beyond.io.tle import Tle
 from beyond.dates import Date, timedelta
+from beyond.frames import create_station
+from beyond.config import config
 import numpy as np
 from map import get_satellite_tracks_from_tle
 import matplotlib.pyplot as plt
@@ -147,7 +149,7 @@ def station_dashboard(id):
 
 @app.route("/stations/<id>/dashboard/map", methods=["GET", "POST"])
 @login_required
-def map(id):
+def map_thing(id):
     if request.method == "GET":
         return render_template("stations_map.html", station_id=id)
     elif request.method == "POST":
@@ -160,6 +162,7 @@ def map(id):
         res["lat"] = stat_inf[4]
         res["long"] = stat_inf[3]
         res["alt"] = int("".join(filter(str.isdigit, stat_inf[2].split()[1])))
+
         for i in station_planned_tles.json():
             added = False
             for tle in tles:
@@ -169,19 +172,27 @@ def map(id):
             if not added:
                 tles.append("\n".join([i["tle0"], i["tle1"], i["tle2"]]))
 
+        import base64
+        import numpy as np
+        from io import BytesIO
+        from matplotlib.figure import Figure
+        from matplotlib.patches import Circle
+        import matplotlib.pyplot as plt
+        from beyond.io.tle import Tle
+        from beyond.dates import Date, timedelta
+        from beyond.frames import create_station
+
         tles = list(set(tles))[0:5]
-        # Calculate the radius of the circle
         h1 = res["alt"]
+        station_lat, station_long = res["lat"], res["long"]
         radius = np.sqrt(12756 * h1 + h1**2) + 2294
 
-        # Generate the circle around the station
-        station_lat = res["lat"]
-        station_long = res["long"]
-
-        # Add the circle to the plot
+        # -----------------------------
+        # 1) Generate the MAP figure
+        # -----------------------------
         circle = Circle(
             (station_lat, station_long),
-            radius / 150,  # Convert radius to degrees (approximation)
+            radius / 150,
             color="yellow",
             alpha=0.3,
             label="Coverage Area",
@@ -189,54 +200,88 @@ def map(id):
         circle2 = Circle(
             (station_lat, station_long), 1, color="blue", label="Station location"
         )
-        fig = Figure(figsize=(15.2, 8.2))
-        ax = fig.subplots()
+        fig_map = Figure(figsize=(15.2, 8.2))
+        ax_map = fig_map.subplots()
         img = "/Users/tedvtorov/Desktop/py-proj/new/soniks-hack/image.png"
         im = plt.imread(str(img))
-        ax.imshow(im, extent=[-180, 180, -90, 90])
-        ax.add_patch(circle)
-        ax.add_patch(circle2)
-        # Generate the plot for the first TLE
-        # tle = tles[0] if tles else None
+        ax_map.imshow(im, extent=[-180, 180, -90, 90])
+        ax_map.add_patch(circle)
+        ax_map.add_patch(circle2)
 
-        for tle in tles:
-            longitudes, latitudes, current_position = get_satellite_tracks_from_tle(tle)
-
-            # Generate the plot using Figure (without pyplot)
-            color = np.random.rand(
-                3,
-            )
+        for tle_str in tles:
+            longitudes, latitudes, current_position = get_satellite_tracks_from_tle(tle_str)
+            color = np.random.rand(3, )
             lon, lat = current_position
             for lons, lats in zip(longitudes, latitudes):
-                ax.plot(lons, lats, color)
-            ax.scatter(
-                [lon],
-                [lat],
+                ax_map.plot(lons, lats, color)
+            ax_map.scatter(
+                [lon], [lat],
                 color=color,
-                label=tle.split("\n")[0],
+                label=tle_str.split("\n")[0],
                 s=50,
                 edgecolors="black",
             )
-        ax.set_xlim([-180, 180])
-        ax.set_ylim([-90, 90])
-        ax.grid(True, color="w", linestyle=":", alpha=0.4)
-        ax.set_xticks(range(-180, 181, 30))
-        ax.set_yticks(range(-90, 91, 30))
-        ax.legend()
-        fig.tight_layout()
+        ax_map.set_xlim([-180, 180])
+        ax_map.set_ylim([-90, 90])
+        ax_map.grid(True, color="w", linestyle=":", alpha=0.4)
+        ax_map.set_xticks(range(-180, 181, 30))
+        ax_map.set_yticks(range(-90, 91, 30))
+        ax_map.legend()
+        fig_map.tight_layout()
 
-        # Save the plot to a temporary buffer
-        buf = BytesIO()
-        fig.savefig(buf, format="png")
-        buf.seek(0)
+        buf_map = BytesIO()
+        fig_map.savefig(buf_map, format="png")
+        buf_map.seek(0)
+        map_data = base64.b64encode(buf_map.getbuffer()).decode("ascii")
 
-        # Encode the image in base64
-        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+        # -----------------------------
+        # 2) Generate the POLAR figure
+        # (sample code from your snippet)
+        # -----------------------------
+        # Example TLE
+        iss_tle = Tle(tles[0]).orbit()
 
-        # Return the image as an HTML-embedded base64 string
-        return f"<img src='data:image/png;base64,{data}'/>"
+        # Create a station using the same lat/long/alt as above
+        station = create_station("Station", (station_lat, station_long, float(h1)))
+        azims, elevs = [], []
 
-        return jsonify({"error": "No TLE data available"}), 400
+        start_time = Date.now()
+        stop_time = start_time + timedelta(hours=24)
+        step = timedelta(seconds=30)
+
+        for orb in station.visibility(iss_tle, start=start_time, stop=stop_time, step=step, events=True):
+            elev_deg = np.degrees(orb.phi)
+            azim_deg = np.degrees(-orb.theta) % 360
+            azims.append(azim_deg)
+            elevs.append(90 - elev_deg)
+
+            if orb.event and orb.event.info.startswith("LOS"):
+                break
+
+        fig_polar = Figure()
+        ax_polar = fig_polar.add_subplot(111, projection="polar")
+        ax_polar.set_theta_direction(-1)
+        ax_polar.set_theta_zero_location("N")
+        ax_polar.plot(np.radians(azims), elevs, ".")
+        ax_polar.set_yticks(range(0, 90, 20))
+        ax_polar.set_yticklabels(map(str, range(90, 0, -20)))
+        ax_polar.set_rmax(90)
+        fig_polar.tight_layout()
+
+        buf_polar = BytesIO()
+        fig_polar.savefig(buf_polar, format="png")
+        buf_polar.seek(0)
+        polar_data = base64.b64encode(buf_polar.getbuffer()).decode("ascii")
+
+        # -----------------------------
+        # Return both images in HTML
+        # -----------------------------
+        html_response = [
+            f"<img src='data:image/png;base64,{map_data}'/>",
+            f"<img src='data:image/png;base64,{polar_data}'/>"
+        ]
+        print([a[0:20] for a in html_response])
+        return jsonify(html_response)
 
 
 @app.route("/stations/<id>/dashboard/reception", methods=["GET", "POST"])
