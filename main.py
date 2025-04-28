@@ -230,6 +230,24 @@ def map_thing(id):
         # -----------------------------
         # Example TLE
         iss_tle = Tle(tles[0]).orbit()
+        tle_visual = (
+            f"TLE Name: {iss_tle.tle.name}\n"
+            f"Norad ID: {iss_tle.tle.norad_id}\n"
+            f"Classification: {iss_tle.tle.classification}\n"
+            f"Cospar ID: {iss_tle.tle.cospar_id}\n"
+            f"Epoch: {iss_tle.tle.epoch}\n"
+            f"Ndot: {iss_tle.tle.ndot}\n"
+            f"Ndotdot: {iss_tle.tle.ndotdot}\n"
+            f"Bstar: {iss_tle.tle.bstar}\n"
+            f"Element Number: {iss_tle.tle.element_nb}\n"
+            f"Revolutions: {iss_tle.tle.revolutions}\n"
+            f"Inclination (i): {np.degrees(iss_tle.tle.i):.4f}°\n"
+            f"RAAN (Ω): {np.degrees(iss_tle.tle.Ω):.4f}°\n"
+            f"Eccentricity (e): {iss_tle.tle.e:.7f}\n"
+            f"Argument of Perigee (ω): {np.degrees(iss_tle.tle.ω):.4f}°\n"
+            f"Mean Anomaly (M): {np.degrees(iss_tle.tle.M):.4f}°\n"
+            f"Mean Motion (n): {iss_tle.tle.n:.8f} rad/s\n"
+        )
 
         # Create a station using the same lat/long/alt as above
         station = create_station("Station", (station_lat, station_long, float(h1)))
@@ -266,9 +284,11 @@ def map_thing(id):
         # -----------------------------
         # Return both images in HTML
         # -----------------------------
+
         html_response = [
             f"<img src='data:image/png;base64,{map_data}'/>",
-            f"<img src='data:image/png;base64,{polar_data}'/>"
+            f"<img src='data:image/png;base64,{polar_data}'/>",
+            '<br>'.join(tle_visual.split("\n")),
         ]
         print([a[0:20] for a in html_response])
         return jsonify(html_response)

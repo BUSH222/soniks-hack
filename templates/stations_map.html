@@ -64,6 +64,7 @@
         async function updateMap() {
             const mapContainer = document.getElementById('satellite-map-container');
             const polarContainer = document.getElementById('polar-graph-container');
+            const dataContainer = document.getElementById('data-container')
 
             const response = await fetch(`/stations/{{ station_id }}/dashboard/map`, {
                 method: 'POST'
@@ -72,11 +73,12 @@
             if (response.ok) {
                 // We expect a JSON array: [map_html, polar_html]
                 const data = await response.json();
-                if (Array.isArray(data) && data.length === 2) {
+                if (Array.isArray(data)) {
                     // data[0] -> Map image HTML
                     // data[1] -> Polar image HTML
                     mapContainer.innerHTML = `<h2>Satellite Map</h2>${data[0]}`;
                     polarContainer.innerHTML = `<h2>Polar Graph</h2>${data[1]}`;
+                    dataContainer.innerHTML = `<h2>Data</h2>${data[2]}`;
                 } else {
                     console.error('Unexpected JSON format', data);
                 }
