@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, url_for,abort
+from flask import Flask, redirect, render_template, request, url_for, abort, jsonify
 from flask_login import (
     login_user,
     LoginManager,
@@ -7,7 +7,7 @@ from flask_login import (
     UserMixin,
     logout_user,
 )
-from bdinit import init_bd,populate_base_data
+from bdinit import init_bd
 from dbmanager import (
     get_all_user_data_by_name,
     confirm_ownership,
@@ -22,10 +22,17 @@ from dbmanager import (
     check_api_key,
     update_api_key,
     get_station_address_by_station_id
-    
 )
 import requests
-
+from beyond.io.tle import Tle
+from beyond.dates import Date, timedelta
+import numpy as np
+from map import get_satellite_tracks_from_tle
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 
 
 init_bd()
@@ -104,12 +111,12 @@ def user_stations(name):
 @app.route("/stations/<id>", methods=["GET", "POST"])
 @login_required
 def station(id):
-    if confirm_ownership(current_user.id,id):
+    if confirm_ownership(current_user.id, id):
         change_button = True
     if request.method == "GET":
         owner = get_station_owner(id)
         info = get_full_station_info_by_id(id)
-    return render_template("stations.html", owner=owner,info=info, change_button=change_button)
+    return render_template("stations.html", owner=owner, info=info, change_button=change_button)
 
 
 @app.route("/stations/<id>/dashboard", methods=["GET", "POST"])
@@ -134,23 +141,91 @@ def station_dashboard(id):
 @login_required
 def map(id):
     if request.method == "GET":
-        info = get_full_station_info_by_id(id)
+        return render_template("stations_map.html", station_id=id)
+    elif request.method == "POST":
         station_planned_tles = requests.get(
             f"https://sonik.space/api/jobs/?id=&status=&ground_station={id}"
         )
         tles = []
-        print(station_planned_tles.json)
-        for i in station_planned_tles.json:
-            res = {}
-            res["tle0"] = i["tle0"]
-            res["tle1"] =i["tle1"]
-            res["tle2"] = i["tle2"]
-            stat_inf = get_full_station_info_by_id(id)
-            res["lat"] = stat_inf[2]
-            res["long"] = stat_inf[3]
-            res["alt"] = stat_inf[4]
-            tles.append(res)
-    return render_template("stations_map.html", info=info, tles=tles)
+        stat_inf = get_full_station_info_by_id(id)
+        res = dict()
+        res["lat"] = stat_inf[4]
+        res["long"] = stat_inf[3]
+        res["alt"] = int(''.join(filter(str.isdigit, stat_inf[2].split()[1])))
+        for i in station_planned_tles.json():
+            added = False
+            for tle in tles:
+                if tle.split('\n')[0] == i["tle0"]:
+                    added = True
+                    break
+            if not added:
+                tles.append('\n'.join([i["tle0"], i["tle1"], i["tle2"]]))
+        
+        tles = list(set(tles))[0:5]
+        # Calculate the radius of the circle
+        h1 = res['alt']
+        radius = np.sqrt(12756 * h1 + h1**2) + 2294
+
+        # Generate the circle around the station
+        station_lat = res["lat"]
+        station_long = res["long"]
+
+        # Add the circle to the plot
+        circle = Circle(
+            (station_lat, station_long),
+            radius / 150,  # Convert radius to degrees (approximation)
+            color='yellow',
+            alpha=0.3,
+            label="Coverage Area"
+        )
+        circle2 = Circle(
+            (station_lat, station_long),
+            1,
+            color='blue',
+            label="Station location"
+        )
+        fig = Figure(figsize=(15.2, 8.2))
+        ax = fig.subplots()
+        img = "/Users/tedvtorov/Desktop/py-proj/new/soniks-hack/image.png"
+        im = plt.imread(str(img))
+        ax.imshow(im, extent=[-180, 180, -90, 90])
+        ax.add_patch(circle)
+        ax.add_patch(circle2)
+        # Generate the plot for the first TLE
+        # tle = tles[0] if tles else None
+
+        for tle in tles:
+            longitudes, latitudes, current_position = get_satellite_tracks_from_tle(tle)
+
+            # Generate the plot using Figure (without pyplot)
+            color = np.random.rand(3,)
+            lon, lat = current_position
+            for lons, lats in zip(longitudes, latitudes):
+                ax.plot(lons, lats, color)
+            ax.scatter([lon], [lat], color=color, label=tle.split('\n')[0], s=50, edgecolors='black')
+        ax.set_xlim([-180, 180])
+        ax.set_ylim([-90, 90])
+        ax.grid(True, color='w', linestyle=":", alpha=0.4)
+        ax.set_xticks(range(-180, 181, 30))
+        ax.set_yticks(range(-90, 91, 30))
+        ax.legend()
+        fig.tight_layout()
+
+        # Save the plot to a temporary buffer
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        buf.seek(0)
+
+        # Encode the image in base64
+        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+
+        # Return the image as an HTML-embedded base64 string
+        return f"<img src='data:image/png;base64,{data}'/>"
+
+        return jsonify({"error": "No TLE data available"}), 400
+
+
+
 
 
 @app.route("/stations/<id>/dashboard/reception", methods=["GET", "POST"])
@@ -169,7 +244,6 @@ def archive(id):
 @app.route("/stations/<id>/dashboard/settings", methods=["GET", "POST"])
 @login_required
 def settings(id):
-    
     if request.method == "GET":
         info = get_station_brief_info_by_id(id)
     if request.method == "POST":
@@ -180,8 +254,8 @@ def settings(id):
         key = info["api_key"]
         update_station_info(
             id, notify_mail=mail, notify_tg=tg, early_time=time)
-        if key!='':
-            update_api_key(current_user.id,key)
+        if key != '':
+            update_api_key(current_user.id, key)
 
     return render_template("settings.html", info=info)
 

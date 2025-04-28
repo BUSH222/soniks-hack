@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Map</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        #satellite-map-container {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Satellite Map</h1>
+    <p>The map will update every 10 seconds to show the latest satellite position.</p>
+    <div id="satellite-map-container">
+        <!-- The satellite map image will be dynamically inserted here -->
+    </div>
+
+    <script>
+        // Function to update the satellite map image
+        async function updateMap() {
+            const mapContainer = document.getElementById('satellite-map-container');
+            const response = await fetch(`/stations/{{ station_id }}/dashboard/map`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const html = await response.text(); // Get the HTML string from the response
+                mapContainer.innerHTML = html; // Replace the container's content with the new image
+            } else {
+                console.error('Failed to fetch the satellite map image');
+            }
+        }
+
+        // Update the map every 10 seconds
+        updateMap(); // Initial load
+        setInterval(updateMap, 10000);
+    </script>
+</body>
+</html>

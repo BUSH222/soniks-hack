@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dbmanager import Base,User,Station,Ownership
-engine = create_engine("postgresql://postgres:postgres@localhost/soniks")
+engine = create_engine("postgresql://postgres:12345678@localhost/soniks")
 
 def init_bd():
     Base.metadata.create_all(bind=engine)
