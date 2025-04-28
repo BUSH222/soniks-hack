@@ -28,7 +28,6 @@ import requests
 from beyond.io.tle import Tle
 from beyond.dates import Date, timedelta
 from beyond.frames import create_station
-from beyond.config import config
 import numpy as np
 from map import get_satellite_tracks_from_tle
 import matplotlib.pyplot as plt
@@ -36,6 +35,7 @@ from io import BytesIO
 import base64
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
+import os
 
 
 init_bd()
@@ -172,16 +172,6 @@ def map_thing(id):
             if not added:
                 tles.append("\n".join([i["tle0"], i["tle1"], i["tle2"]]))
 
-        import base64
-        import numpy as np
-        from io import BytesIO
-        from matplotlib.figure import Figure
-        from matplotlib.patches import Circle
-        import matplotlib.pyplot as plt
-        from beyond.io.tle import Tle
-        from beyond.dates import Date, timedelta
-        from beyond.frames import create_station
-
         tles = list(set(tles))[0:5]
         h1 = res["alt"]
         station_lat, station_long = res["lat"], res["long"]
@@ -202,7 +192,7 @@ def map_thing(id):
         )
         fig_map = Figure(figsize=(15.2, 8.2))
         ax_map = fig_map.subplots()
-        img = "/Users/tedvtorov/Desktop/py-proj/new/soniks-hack/image.png"
+        img = os.path.join(os.path.dirname(__file__), "image.png")
         im = plt.imread(str(img))
         ax_map.imshow(im, extent=[-180, 180, -90, 90])
         ax_map.add_patch(circle)
@@ -314,9 +304,9 @@ def settings(id):
         update_station_info(id, notify_mail=mail, notify_tg=tg, early_time=time)
         if key != "":
             update_api_key(current_user.id, key)
-    if n_status[0] == None:
+    if n_status[0] is None:
         n_status[0] = False
-    if n_status[1] == None:
+    if n_status[1] is None:
         n_status[1] = False
     print(n_status)
     return render_template(

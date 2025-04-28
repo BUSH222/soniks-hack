@@ -1,12 +1,9 @@
-import sys
 import numpy as np
-import matplotlib.pyplot as plt
-from pathlib import Path
 from datetime import datetime
-
 from beyond.io.tle import Tle
-from beyond.dates import Date, timedelta
+from beyond.dates import Date
 from beyond.propagators.analytical.sgp4 import Sgp4
+
 
 def get_satellite_tracks_from_tle(tle_str):
     tle = Tle(tle_str)
@@ -32,7 +29,7 @@ def get_satellite_tracks_from_tle(tle_str):
             lats = []
             longitudes.append(lons)
             latitudes.append(lats)
-        elif orb.i < np.pi /2 and (np.sign(prev_lon) == 1 and np.sign(lon) == -1):
+        elif orb.i < np.pi / 2 and (np.sign(prev_lon) == 1 and np.sign(lon) == -1):
             lons.append(lon + 360)
             lats.append(lat)
             lons = [prev_lon - 360]
@@ -51,8 +48,6 @@ def get_satellite_tracks_from_tle(tle_str):
         lats.append(lat)
         prev_lon = lon
         prev_lat = lat
-    
-
 
     # img = "/Users/tedvtorov/Desktop/py-proj/new/soniks-hack/image.png"
 
@@ -78,8 +73,10 @@ def get_satellite_tracks_from_tle(tle_str):
 
     return [longitudes, latitudes, [lon, lat]]
 
-tle_str = """METEOR M2-4
-1 59051U 24039A   25118.15566969  .00000086  00000-0  58284-4 0  9997
-2 59051  98.6463  79.0897 0006030 296.7745  63.2816 14.22361028 60266"""
 
-get_satellite_tracks_from_tle(tle_str)
+if __name__ == "__main__":
+    tle_str = """METEOR M2-4
+    1 59051U 24039A   25118.15566969  .00000086  00000-0  58284-4 0  9997
+    2 59051  98.6463  79.0897 0006030 296.7745  63.2816 14.22361028 60266"""
+
+    get_satellite_tracks_from_tle(tle_str)
