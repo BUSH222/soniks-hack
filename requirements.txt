@@ -1,7 +1,7 @@
 beyond==0.8
-Flask==3.1.0
-Flask_Login==0.6.3
-matplotlib==3.10.1
+Flask==2.2.5
+Flask_Login==0.6.2
+matplotlib==3.8.4
 numpy==2.2.5
 Requests==2.32.3
-SQLAlchemy==2.0.36
+SQLAlchemy==2.0.37

@@ -7,7 +7,7 @@ from flask_login import (
     UserMixin,
     logout_user,
 )
-from bdinit import init_bd
+from bdinit import init_bd  # , populate_base_data
 from dbmanager import (
     get_all_user_data_by_name,
     confirm_ownership,
@@ -39,7 +39,7 @@ import os
 
 
 init_bd()
-# populate_base_data()
+# populate_base_data()  # Uncomment this line to populate the database with initial data
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
@@ -332,7 +332,6 @@ def settings(id):
     return render_template(
         "settings.html", info=info, notify_mail=n_status[0], notify_tg=n_status[1]
     )
-
 
 
 @app.route("/stations/<id>/register_sdr", methods=["GET", "POST"])
