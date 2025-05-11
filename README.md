@@ -276,6 +276,7 @@ https://disk.yandex.ru/i/xi_UOFOAw_9vzg
 
 
 ## Дополнительная информация
-Figma: https://www.figma.com/design/1OdyJNqG1T3yG3eMXKn4jq/SONIKS-FIGMA?node-id=6-115&t=Y8CTxGFVqTn8QTsC-1
-Статья от ИГУ о хакатоне: https://isu.ru/ru/news/2025/details/news-id2025april30geoskan/
-Хакатон состоялся из 2 этапов. Наше решение отборочного этапа тут: https://github.com/BUSH222/soniks-hack-entry
+- Figma: https://www.figma.com/design/1OdyJNqG1T3yG3eMXKn4jq/SONIKS-FIGMA?node-id=6-115&t=Y8CTxGFVqTn8QTsC-1
+- Статья от ИГУ о хакатоне: https://isu.ru/ru/news/2025/details/news-id2025april30geoskan/
+- Хакатон состоялся из 2 этапов. Наше решение отборочного этапа тут: https://github.com/BUSH222/soniks-hack-entry
+- Приз за первое место - каждому участнику мерч от геоскана, квадрокоптер пионер мини, и оплачиваемая стажировка в геоскан без собеседования.
